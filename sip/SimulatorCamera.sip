@@ -96,5 +96,9 @@ public:
 %MethodCode
 	LIMA_REPR_CODE
 %End
+
+ private:
+	Camera(const Simulator::Camera&);
+
 };
 };
