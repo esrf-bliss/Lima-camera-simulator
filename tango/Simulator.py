@@ -37,6 +37,28 @@ def grouper(n, iterable, padvalue=None):
 
 class Simulator(PyTango.Device_4Impl):
 
+#------------------------------------------------------------------
+#    Static properties
+#------------------------------------------------------------------
+    _Mode = {
+        'GENERATOR': SimuMod.Camera.MODE_GENERATOR,
+        'GENERATOR_PREFETCH': SimuMod.Camera.MODE_GENERATOR_PREFETCH,
+        'LOADER': SimuMod.Camera.MODE_LOADER,
+        'LOADER_PREFETCH': SimuMod.Camera.MODE_LOADER_PREFETCH,
+	}
+
+    _invMode = {v: k for k, v in _Mode.items()}
+
+    _RotationAxis = {
+        'ROTATIONX': SimuMod.FrameBuilder.RotationX,
+        'ROTATIONY': SimuMod.FrameBuilder.RotationY,
+	}
+
+    _FillType = {
+        'GAUSS':       SimuMod.FrameBuilder.Gauss,
+        'DIFFRACTION': SimuMod.FrameBuilder.Diffraction,
+	}
+
     Core.DEB_CLASS(Core.DebModApplication, 'LimaSimulator')
 
 #------------------------------------------------------------------
@@ -45,15 +67,24 @@ class Simulator(PyTango.Device_4Impl):
     def __init__(self,*args) :
         PyTango.Device_4Impl.__init__(self,*args)
 
+        # Leagcy code used by AttrHelper
+        # switch to the new pyTango please
+        self.__Mode = {
+            'GENERATOR': SimuMod.Camera.MODE_GENERATOR,
+            'GENERATOR_PREFETCH': SimuMod.Camera.MODE_GENERATOR_PREFETCH,
+            'LOADER': SimuMod.Camera.MODE_LOADER,
+            'LOADER_PREFETCH': SimuMod.Camera.MODE_LOADER_PREFETCH,
+    	}
+
         self.__RotationAxis = {
             'ROTATIONX': SimuMod.FrameBuilder.RotationX,
             'ROTATIONY': SimuMod.FrameBuilder.RotationY,
-	}
+    	}
 
         self.__FillType = {
             'GAUSS':       SimuMod.FrameBuilder.Gauss,
             'DIFFRACTION': SimuMod.FrameBuilder.Diffraction,
-	}
+    	}
 
         self.init_device()
 
@@ -69,14 +100,28 @@ class Simulator(PyTango.Device_4Impl):
     @Core.DEB_MEMBER_FUNCT
     def init_device(self):
         self.set_state(PyTango.DevState.ON)
-        #self.get_device_properties(self.get_device_class())
+
+        # Load the properties
+        self.get_device_properties(self.get_device_class())
+
+        # Apply properties if any
+        if self.mode and (Simulator._Mode.get(self.mode) != None):
+            _SimuCamera.setMode(Simulator._Mode[self.mode])
+
+        if 'PREFETCH' in self.mode and self.nb_prefetched_frames:
+            _SimuCamera.getFrameGetter().setNbPrefetchedFrames(self.nb_prefetched_frames)
 
     @Core.DEB_MEMBER_FUNCT
     def getAttrStringValueList(self, attr_name):
         return AttrHelper.get_attr_string_value_list(self, attr_name)
 
     def __getattr__(self,name) :
-        return AttrHelper.get_attr_4u(self, name, _SimuFrameBuilder)
+        try:
+            print(name)
+            print(type(_SimuCamera.getFrameGetter()))
+            return AttrHelper.get_attr_4u(self, name, _SimuCamera.getFrameGetter(), False)
+        except:
+            return AttrHelper.get_attr_4u(self, name, _SimuCamera)
 
     @staticmethod
     def getGaussPeaksFromFloatArray(peak_list_flat):
@@ -85,7 +130,7 @@ class Simulator(PyTango.Device_4Impl):
         return gauss_peaks
 
     def read_peaks(self,attr):
-        gauss_peaks = _SimuFrameBuilder.getPeaks()
+        gauss_peaks = _SimuCamera.getFrameGetter().getPeaks()
         peak_list = [(p.x0, p.y0, p.fwhm, p.max) for p in gauss_peaks]
         peak_list_flat = list(itertools.chain(*peak_list))
         attr.set_value(map(float, peak_list_flat))
@@ -93,38 +138,52 @@ class Simulator(PyTango.Device_4Impl):
     def write_peaks(self,attr) :
         peak_list_flat = attr.get_write_value()
         gauss_peaks = self.getGaussPeaksFromFloatArray(peak_list_flat)
-        _SimuFrameBuilder.setPeaks(gauss_peaks)
+        _SimuCamera.getFrameGetter().setPeaks(gauss_peaks)
 
     def read_peak_angles(self,attr) :
-        peak_angle_list = _SimuFrameBuilder.getPeakAngles()
+        peak_angle_list = _SimuCamera.getFrameGetter().getPeakAngles()
         attr.set_value(peak_angle_list)
 
     def write_peak_angles(self,attr) :
         peak_angle_list = attr.get_write_value()
-        _SimuFrameBuilder.setPeakAngles(map(float, peak_angle_list))
+        _SimuCamera.getFrameGetter().setPeakAngles(map(float, peak_angle_list))
 
     def read_diffraction_pos(self,attr) :
-        x, y = _SimuFrameBuilder.getDiffractionPos()
+        x, y = _SimuCamera.getFrameGetter().getDiffractionPos()
         attr.set_value((x, y))
 
     def write_diffraction_pos(self,attr) :
         x, y = attr.get_write_value()
-        _SimuFrameBuilder.setDiffractionPos(x, y)
+        _SimuCamera.getFrameGetter().setDiffractionPos(x, y)
 
     def read_diffraction_speed(self,attr) :
-        sx, sy = _SimuFrameBuilder.getDiffractionSpeed()
+        sx, sy = _SimuCamera.getFrameGetter().getDiffractionSpeed()
         attr.set_value((sx, sy))
 
     def write_diffraction_speed(self,attr) :
         sx, sy = attr.get_write_value()
-        _SimuFrameBuilder.setDiffractionSpeed(sx, sy)
+        _SimuCamera.getFrameGetter().setDiffractionSpeed(sx, sy)
 
+    # def read_mode(self,attr) :
+    #     invMode = {v: k for k, v in self.__Mode.items()}
+    #     mode = _SimuCamera.getMode()
+    #     attr.set_value(invMode[mode])
+    #
+    # def write_mode(self,attr) :
+    #     mode = attr.get_write_value()
+    #     _SimuCamera.setMode(self.__Mode[mode])
 
 class SimulatorClass(PyTango.DeviceClass):
 
     class_property_list = {}
 
     device_property_list = {
+        'mode':
+        [PyTango.DevString,
+         "Simulator mode: GENERATOR, GENERATOR_PREFETCH, LOADER, LOADER_PREFETCH",[]],
+        'nb_prefetched_frames':
+        [PyTango.DevLong,
+         "Number of prefetched frames",[]],
         'peaks':
         [PyTango.DevVarDoubleArray,
          "Gauss peak list [x0,y0,w0,A0,x1,y1,w1,A1...]",[]],
@@ -146,6 +205,22 @@ class SimulatorClass(PyTango.DeviceClass):
     }
 
     attr_list = {
+        # Simulator mode
+        'mode':
+        [[PyTango.DevString,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        # Simulator with prefetch
+        'nb_prefetched_frames':
+        [[PyTango.DevLong,
+          PyTango.SCALAR,
+          PyTango.READ_WRITE]],
+        # Simulator in loader mode
+        'file_pattern':
+        [[PyTango.DevString,
+          PyTango.SCALAR,
+          PyTango.WRITE]],
+        # Simulator in generator mode
         'peaks':
         [[PyTango.DevDouble,
           PyTango.SPECTRUM,
@@ -192,14 +267,19 @@ class SimulatorClass(PyTango.DeviceClass):
 # Plugins
 #----------------------------------------------------------------------------
 _SimuCamera = None
-_SimuFrameBuilder = None
 _SimuInterface = None
 
 def get_control(peaks=[], peak_angles=[], **keys) :
-    global _SimuCamera, _SimuFrameBuilder, _SimuInterface
+    global _SimuCamera, _SimuInterface
     if _SimuInterface is None:
-        _SimuCamera = SimuMod.Camera()
-        _SimuFrameBuilder = _SimuCamera.getFrameBuilder()
+
+        # If initial mode is specified, pass it to the constructor
+        if 'mode' in keys:
+            mode = Simulator._Mode[keys['mode']]
+            _SimuCamera = SimuMod.Camera(mode)
+        else:
+            _SimuCamera = SimuMod.Camera()
+
         _SimuInterface = SimuMod.Interface(_SimuCamera)
 
         if peaks:
@@ -209,13 +289,13 @@ def get_control(peaks=[], peak_angles=[], **keys) :
             if type(peaks) == str:
                 peaks = map(float, peaks.split(','))
             gauss_peaks = Simulator.getGaussPeaksFromFloatArray(peaks)
-            _SimuFrameBuilder.setPeaks(gauss_peaks)
+            _SimuCamera.getFrameGetter().setPeaks(gauss_peaks)
         if peak_angles:
             if type(peak_angles) == str:
                 peak_angles = peak_angles.split(',')
             if type(peak_angles[0]) == str:
                 peak_angles = map(float, peak_angles)
-            _SimuFrameBuilder.setPeakAngles(peak_angles)
+            _SimuCamera.getFrameGetter().setPeakAngles(peak_angles)
 
     return Core.CtControl(_SimuInterface)
 

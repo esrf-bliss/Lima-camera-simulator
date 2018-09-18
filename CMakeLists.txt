@@ -178,7 +178,7 @@ install(
 
 if(CAMERA_ENABLE_PYTHON)
   install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python/
+    FILES python/__init__.py
     DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima/Simulator"
   )
 endif()
