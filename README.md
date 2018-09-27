@@ -1,6 +1,7 @@
 # Simulator Camera Plugin
 
-This repository aims to get you started with LImA camera plugin development. It provides scaffholding for a camera named MyCamera.
+This is the LImA camera simulator. It can help you getting started with LImA and to experiment without any hardware.
+
 ## Build
 
 ### Building against the stable version of LImA
