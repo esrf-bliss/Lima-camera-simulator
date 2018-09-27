@@ -19,10 +19,10 @@ requirements:
   host:
     - python {{ python }}
     - numpy
-    - sip 4.18*           #For the SIP generator
+    - sip 4.19*           #For the SIP generator
   run:
     - python {{ python }}
-    - sip 4.18*           #For the SIP module
+    - sip 4.19*           #For the SIP module
     - lima-core
 
 test:
