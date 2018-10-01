@@ -312,7 +312,8 @@ void Camera::startAcq()
 {
   DEB_MEMBER_FUNCT();
 
-  if (m_thread.getStatus() != SimuThread::Prepare) THROW_HW_ERROR(Error) << "Camera not Prepared";
+  if ((m_thread.getStatus() != SimuThread::Prepare) && (m_thread.getStatus() != SimuThread::Ready))
+    THROW_HW_ERROR(Error) << "Camera not Prepared nor Ready (Multi Trigger)";
 
   m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
 
