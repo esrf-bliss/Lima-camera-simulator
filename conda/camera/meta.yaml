@@ -26,14 +26,8 @@ requirements:
     - {{ pin_compatible('lima-core', max_pin='x.x') }}
 
 test:
-  requires:
-    - cmake
   imports:
     - Lima.Simulator
-  commands:
-    - cmake --version
-    - ctest --version
-    - cpack --version
 
 about:
   home: https://github.com/esrf-bliss/Lima
