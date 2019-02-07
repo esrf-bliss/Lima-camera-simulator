@@ -2,18 +2,12 @@
 
 This is the LImA camera simulator. It can help you getting started with LImA and to experiment without any hardware.
 
-## Build
+## Install
 
-### Building against the stable version of LImA
+### Camera python
 
-```
-cd conda
-conda build . -c http://bcu-ci.esrf.fr/stable
-```
+conda install -c esrf-bcu lima-camera-simulator
 
-### Building against the develop version of LImA
+### Camera tango device server
 
-```
-cd conda
-conda build . -c http://bcu-ci.esrf.fr/devel
-```
+conda install -c esrf-bcu lima-camera-simulator-tango
