@@ -27,5 +27,5 @@ Lima is a C++ library which can be used with many different cameras. The library
 
 ## Documentation
 
-The documentation is available [here](http://lima-doc.readthedocs.io/)
+The documentation is available [here](https://lima1.readthedocs.io/)
 
