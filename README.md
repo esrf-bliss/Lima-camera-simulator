@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/conda/vn/esrf-bcu/lima-camera-simulator.svg?style=flat)](https://anaconda.org/esrf-bcu)
 [![Platform](https://img.shields.io/conda/pn/esrf-bcu/lima-camera-simulator.svg?style=flat)](https://anaconda.org/esrf-bcu)
 
-# LIMA Simulator Camera Plugin
+# LImA Simulator Camera Plugin
 
 This is the LImA camera simulator. It can help you getting started with LImA and to experiment without any hardware.
 
@@ -17,7 +17,6 @@ conda install -c esrf-bcu lima-camera-simulator
 ### Camera tango device server
 
 conda install -c esrf-bcu lima-camera-simulator-tango
-
 
 # LImA
 
