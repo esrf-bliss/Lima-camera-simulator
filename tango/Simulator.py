@@ -133,7 +133,7 @@ class Simulator(PyTango.Device_4Impl):
         gauss_peaks = _SimuCamera.getFrameGetter().getPeaks()
         peak_list = [(p.x0, p.y0, p.fwhm, p.max) for p in gauss_peaks]
         peak_list_flat = list(itertools.chain(*peak_list))
-        attr.set_value(map(float, peak_list_flat))
+        attr.set_value(peak_list_flat)
 
     def write_peaks(self,attr) :
         peak_list_flat = attr.get_write_value()
@@ -163,6 +163,14 @@ class Simulator(PyTango.Device_4Impl):
     def write_diffraction_speed(self,attr) :
         sx, sy = attr.get_write_value()
         _SimuCamera.getFrameGetter().setDiffractionSpeed(sx, sy)
+
+    def read_nb_prefetched_frames(self,attr) :
+        if (_SimuCamera.getMode() == SimuMod.Camera.MODE_GENERATOR_PREFETCH) or \
+           (_SimuCamera.getMode() == SimuMod.Camera.MODE_LOADER_PREFETCH) :
+            nb_prefetched_frames = _SimuCamera.getFrameGetter().getNbPrefetchedFrames()
+        else :
+            nb_prefetched_frames = 0
+        attr.set_value(nb_prefetched_frames)
 
     # def read_mode(self,attr) :
     #     invMode = {v: k for k, v in self.__Mode.items()}
