@@ -3,7 +3,7 @@
 Simulator
 ----------
 
-.. image:: Simulator.jpg
+.. image:: simulator.jpg
 
 Introduction
 ````````````
