@@ -12,6 +12,10 @@ build:
   noarch: python
 
 requirements:
+  build:
+    - cmake
+    - git
+    - lima-core
   run:
     - lima-tango-server
     - lima-camera-simulator

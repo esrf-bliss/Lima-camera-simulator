@@ -26,13 +26,19 @@
 import itertools
 import PyTango
 
+# python3 compat
+try:
+    from itertools import izip as zip
+except ImportError:
+    pass
+
 from Lima.Server import AttrHelper
 
 from Lima import Core
 from Lima import Simulator as SimuMod
 
 def grouper(n, iterable, padvalue=None):
-    return itertools.izip(*[itertools.chain(iterable, itertools.repeat(padvalue, n-1))]*n)
+    return zip(*[itertools.chain(iterable, itertools.repeat(padvalue, n-1))]*n)
 
 
 class Simulator(PyTango.Device_4Impl):

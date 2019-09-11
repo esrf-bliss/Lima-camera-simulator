@@ -8,4 +8,4 @@ ct = Core.CtControl(hw)
 ct.prepareAcq()
 ct.startAcq()
 
-time.sleep(1)
+time.sleep(3)
