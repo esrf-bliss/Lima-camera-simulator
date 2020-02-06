@@ -58,8 +58,6 @@ public:
 
   enum SimuShutterMode { FRAME, MANUAL };
 
-  static const char *DetectorModel[4];
-
   Camera(const Mode &mode = Mode::MODE_GENERATOR);
   ~Camera();
 

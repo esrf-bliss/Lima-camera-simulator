@@ -131,11 +131,6 @@ void Camera::SimuThread::execStartAcq()
   setStatus(Ready);
 }
 
-const char *Camera::DetectorModel[] = {"Generator",
-                                       "Generator Prefetched"
-                                       "Loader",
-                                       "Loader Prefetched"};
-
 Camera::Camera(const Mode &mode) : m_mode(mode), m_frame_getter(NULL), m_thread(*this)
 {
   DEB_CONSTRUCTOR();
@@ -232,6 +227,13 @@ FramePrefetcher<FrameLoader> *Camera::getFrameLoaderPrefetched()
 
 void Camera::getDetectorModel(std::string &det_model) const
 {
+  static const char* DetectorModel[4] = {
+    "Generator",
+    "Generator Prefetched",
+    "Loader",
+    "Loader Prefetched"
+  };
+
   det_model = DetectorModel[m_frame_getter->getMode()];
 }
 
