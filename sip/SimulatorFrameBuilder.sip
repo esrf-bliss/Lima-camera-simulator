@@ -131,7 +131,6 @@ public:
 		RotationX, RotationY,
 	};
 
-	FrameBuilder();
 	FrameBuilder( FrameDim &frame_dim, Bin &bin, Roi &roi,
 	              const std::vector<struct Simulator::GaussPeak> &peaks,
 		      double grow_factor );
@@ -182,6 +181,9 @@ public:
 
 	void getDiffractionSpeed( double &sx /Out/, double &sy /Out/ ) const;
 	void setDiffractionSpeed( const double &sx, const double &sy );
+	
+private:
+	FrameBuilder();
 };
 
 };

@@ -30,8 +30,6 @@ class FrameLoader
 %End
 
 public:
-    FrameLoader();
-
     unsigned long getFrameNr() const;
     void resetFrameNr(unsigned long frame_nr = 0);
 
@@ -42,6 +40,9 @@ public:
 
     void setFilePattern(const std::string& file_pattern);
     void getFilePattern(std::string& file_pattern /Out/);
+    
+private:
+    FrameLoader();
 };
 
 };

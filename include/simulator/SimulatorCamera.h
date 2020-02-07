@@ -101,7 +101,9 @@ public:
   int getNbAcquiredFrames();
 
   void reset();
-
+  
+  void setHwMaxImageSizeCallback(HwMaxImageSizeCallback &cbk) { m_cbk = &cbk; }
+  
 private:
   class SimuThread : public CmdThread {
     DEB_CLASS_NAMESPC(DebModCamera, "Camera", "SimuThread");
@@ -154,10 +156,7 @@ private:
   Mode m_mode;                 //<! The current mode of the simulateur
   FrameGetter *m_frame_getter; //<! The current frame getter (according to the mode)
 
-  // unsigned int m_nb_prebuilt_frames;  //<! In MODE_GENERATOR_PREBUILT mode, the number of frame to prebuilt
-  // std::string m_file_pattern;         //<! In MODE_LOADER mode, the file pattern use to load the frames
-
-  // bool m_mis_cb_act;	//<! Used by setMaxImageSizeCallbackActive
+  HwMaxImageSizeCallback *m_cbk; //<! Keep a reference of the HwMaxImageSizeCallback
 };
 
 SIMULATOR_EXPORT std::ostream &operator<<(std::ostream &os, Camera &simu);

@@ -154,21 +154,23 @@ void Camera::setDefaultProperties()
 
 void Camera::constructFrameGetter()
 {
+  assert(m_cbk != NULL);
+  
   switch (m_mode) {
   case Mode::MODE_GENERATOR:
-    m_frame_getter = new FrameBuilder();
+    m_frame_getter = new FrameBuilder(*m_cbk);
     break;
 
   case Mode::MODE_GENERATOR_PREFETCH:
-    m_frame_getter = new FramePrefetcher<FrameBuilder>();
+    m_frame_getter = new FramePrefetcher<FrameBuilder>(*m_cbk);
     break;
 
   case Mode::MODE_LOADER:
-    m_frame_getter = new FrameLoader();
+    m_frame_getter = new FrameLoader(*m_cbk);
     break;
 
   case Mode::MODE_LOADER_PREFETCH:
-    m_frame_getter = new FramePrefetcher<FrameLoader>();
+    m_frame_getter = new FramePrefetcher<FrameLoader>(*m_cbk);
     break;
   }
 }

@@ -35,7 +35,6 @@ typedef Simulator::FramePrefetcher<Simulator::FrameLoader> FrameLoaderPrefetched
 %End
 
 public:
-    FrameLoaderPrefetched();
     ~FrameLoaderPrefetched();
 
     void getNbPrefetchedFrames(unsigned int& nb_prefetched_frames) const;
@@ -55,6 +54,9 @@ public:
     // Inherited from FrameLoader
     void setFilePattern(const std::string& file_pattern);
     void getFilePattern(std::string& file_pattern /Out/);
+    
+private:
+    FrameLoaderPrefetched();
 };
 
 
@@ -70,7 +72,6 @@ typedef Simulator::FramePrefetcher<Simulator::FrameBuilder> FrameBuilderPrefetch
 %End
 
 public:
-    FrameBuilderPrefetched();
     ~FrameBuilderPrefetched();
 
     void getNbPrefetchedFrames(unsigned int& nb_prefetched_frames) const;
@@ -88,40 +89,43 @@ public:
     void getMaxImageSize(Size& max_image_size) const;
 
     // Inherited from FrameBuilder
-	void getBin( Bin &bin /Out/ ) const;
-	void setBin( const Bin &bin );
-	void checkBin( Bin &bin /In,Out/ ) const;
+    void getBin( Bin &bin /Out/ ) const;
+    void setBin( const Bin &bin );
+    void checkBin( Bin &bin /In,Out/ ) const;
 
-	void getRoi( Roi &roi /Out/ ) const;
-	void setRoi( const Roi &roi );
-	void checkRoi( Roi &roi /In,Out/ ) const;
+    void getRoi( Roi &roi /Out/ ) const;
+    void setRoi( const Roi &roi );
+    void checkRoi( Roi &roi /In,Out/ ) const;
 
-	void getPeaks( std::vector<struct Simulator::GaussPeak> &peaks /Out/ ) const;
-	void setPeaks( const std::vector<struct Simulator::GaussPeak> &peaks );
+    void getPeaks( std::vector<struct Simulator::GaussPeak> &peaks /Out/ ) const;
+    void setPeaks( const std::vector<struct Simulator::GaussPeak> &peaks );
 
-	void getPeakAngles( std::vector<double> &angles /Out/) const;
-	void setPeakAngles( const std::vector<double> &angles );
+    void getPeakAngles( std::vector<double> &angles /Out/) const;
+    void setPeakAngles( const std::vector<double> &angles );
 
-	void getFillType( Simulator::FrameBuilder::FillType &fill_type /Out/) const;
-	void setFillType( Simulator::FrameBuilder::FillType fill_type );
+    void getFillType( Simulator::FrameBuilder::FillType &fill_type /Out/) const;
+    void setFillType( Simulator::FrameBuilder::FillType fill_type );
 
-	void getRotationAxis( Simulator::FrameBuilder::RotationAxis &rot_axis /Out/) const;
-	void setRotationAxis( Simulator::FrameBuilder::RotationAxis rot_axis );
+    void getRotationAxis( Simulator::FrameBuilder::RotationAxis &rot_axis /Out/) const;
+    void setRotationAxis( Simulator::FrameBuilder::RotationAxis rot_axis );
 
-	void getRotationAngle( double &a /Out/ ) const;
-	void setRotationAngle( const double &a );
+    void getRotationAngle( double &a /Out/ ) const;
+    void setRotationAngle( const double &a );
 
-	void getRotationSpeed( double &s /Out/ ) const;
-	void setRotationSpeed( const double &s );
+    void getRotationSpeed( double &s /Out/ ) const;
+    void setRotationSpeed( const double &s );
 
-	void getGrowFactor( double &grow_factor /Out/ ) const;
-	void setGrowFactor( const double &grow_factor );
+    void getGrowFactor( double &grow_factor /Out/ ) const;
+    void setGrowFactor( const double &grow_factor );
 
-	void getDiffractionPos( double &x /Out/, double &y /Out/ ) const;
-	void setDiffractionPos( const double &x, const double &y );
+    void getDiffractionPos( double &x /Out/, double &y /Out/ ) const;
+    void setDiffractionPos( const double &x, const double &y );
 
-	void getDiffractionSpeed( double &sx /Out/, double &sy /Out/ ) const;
-	void setDiffractionSpeed( const double &sx, const double &sy );
+    void getDiffractionSpeed( double &sx /Out/, double &sy /Out/ ) const;
+    void setDiffractionSpeed( const double &sx, const double &sy );
+  
+private:
+    FrameBuilderPrefetched();
 };
 
 };

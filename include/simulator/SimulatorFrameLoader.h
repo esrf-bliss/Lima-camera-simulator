@@ -46,7 +46,10 @@ class SIMULATOR_EXPORT FrameLoader : public FrameGetter, public HwMaxImageSizeCa
 public:
   static const bool is_thread_safe = false;
 
-  FrameLoader() : m_frame_nr(0), m_mis_cb_act(false), m_current_stream(std::make_shared<std::ifstream>()) {}
+  FrameLoader(HwMaxImageSizeCallback &cbk) : m_frame_nr(0), m_mis_cb_act(false), m_current_stream(std::make_shared<std::ifstream>())
+  {
+    registerMaxImageSizeCallback(cbk);
+  }
 
   Camera::Mode getMode() const { return Camera::MODE_LOADER; }
 

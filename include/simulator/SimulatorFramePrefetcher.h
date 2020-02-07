@@ -46,7 +46,7 @@ class FramePrefetcher : public FrameGetterImpl {
   DEB_CLASS_NAMESPC(DebModCamera, "FramePrefetcher", "Simulator");
 
 public:
-  FramePrefetcher() : m_frame_nr(0) {}
+  FramePrefetcher(HwMaxImageSizeCallback &cbk) : FrameGetterImpl(cbk), m_frame_nr(0) {}
   ~FramePrefetcher() { cleanupPrebuiltFrames(); }
 
   Camera::Mode getMode() const { return static_cast<Camera::Mode>(FrameGetterImpl::getMode() + 1); }
