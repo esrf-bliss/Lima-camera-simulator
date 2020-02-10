@@ -167,7 +167,10 @@ static void findFiles(const std::string &path_pattern, std::string &folder, std:
 
 void FrameLoader::setFilePattern(const std::string &file_pattern)
 {
-  if (m_file_pattern != file_pattern) m_file_pattern = file_pattern;
+  DEB_MEMBER_FUNCT();
+
+  if (m_file_pattern != file_pattern)
+    m_file_pattern = file_pattern;
 
   // Clear the file list
   m_files.clear();
@@ -216,6 +219,8 @@ void FrameLoader::setFilePattern(const std::string &file_pattern)
 
     m_frame_dim = FrameDim(size, image_type);
 
+    DEB_TRACE() << DEB_VAR1(m_frame_dim);
+
     if (m_mis_cb_act)
       // Signal LiMA core that the frame properties may have changed
       maxImageSizeChanged(size, image_type);
@@ -225,17 +230,22 @@ void FrameLoader::setFilePattern(const std::string &file_pattern)
 
 void FrameLoader::prepareAcq()
 {
+  DEB_MEMBER_FUNCT();
+
   if (!m_files.empty()) {
     // Position the iterator
     m_it_current_file = m_files.begin();
 
     // Open the file
     m_current_stream->open(m_it_current_file->c_str(), std::ios::binary);
+    DEB_TRACE() << "Open file " << *m_it_current_file;
   }
 }
 
 bool FrameLoader::getNextFrame(unsigned char *ptr)
 {
+  DEB_MEMBER_FUNCT();
+
   if (m_it_current_file != m_files.end()) {
     Size size;
     ImageType image_type;
@@ -263,24 +273,22 @@ bool FrameLoader::getNextFrame(unsigned char *ptr)
         m_it_current_file++;
 
         if (m_it_current_file != m_files.end())
+        {
           // Open next file
           m_current_stream->open(m_it_current_file->c_str(), std::ios::binary);
+          DEB_TRACE() << "Open file " << *m_it_current_file;
+        }
         else
           throw LIMA_EXC(CameraPlugin, Error, "End of file list");
       }
 
       // Check if the file is still open
-      if (!m_current_stream->is_open()) throw LIMA_EXC(CameraPlugin, Error, "Failed to open EDF file");
+      if (!m_current_stream->is_open())
+        throw LIMA_EXC(CameraPlugin, Error, "Failed to open EDF file");
 
       // Parse the header
       std::map<std::string, std::string> headers;
       std::streamsize data_pos = parseEDFHeader(*m_current_stream, headers);
-
-      // Excerpt from header:
-      // DataType = UnsignedInteger;
-      // Size = 1048576;
-      // Dim_1 = 512;
-      // Dim_2 = 512;
 
       Point p;
       p.x  = std::stoi(headers["Dim_1"]); // C++11
@@ -289,16 +297,28 @@ bool FrameLoader::getNextFrame(unsigned char *ptr)
 
       // Interpret header
       auto val = headers.find("DataType");
-      if (val != headers.end()) image_type = getImageType(val->second);
+      if (val != headers.end())
+        image_type = getImageType(val->second);
 
       frame_dim          = FrameDim(size, image_type);
       const int mem_size = frame_dim.getMemSize();
 
+      DEB_TRACE() << DEB_VAR2(frame_dim, mem_size);
+
       assert(frame_dim.getMemSize() == std::stol(headers["Size"]));
+      
+      if (m_frame_dim != frame_dim)
+        throw LIMA_EXC(CameraPlugin, Error, "Frame dimensions do not match");
 
       // Read the frame data
       m_current_stream->read(reinterpret_cast<char *>(ptr), mem_size);
-      if (m_current_stream->fail()) throw LIMA_EXC(CameraPlugin, Error, "Failed to read data section of EDF file");
+      if (m_current_stream->fail())
+        throw LIMA_EXC(CameraPlugin, Error, "Failed to read data section of EDF file");
+      
+      std::stringstream os;
+      unsigned short* data = (unsigned short*) ptr;
+      os << std::hex << data[0] << ' ' << data[1] << ' '<< data[2] << ' '<< data[3];
+      DEB_TRACE() << "data: " << os.str();
     } else
       throw LIMA_EXC(CameraPlugin, Error, "Unsupported file format");
 
