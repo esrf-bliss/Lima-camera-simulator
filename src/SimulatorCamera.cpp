@@ -22,6 +22,8 @@
 
 #include <unistd.h>
 
+#include <lima/Debug.h>
+
 #include "simulator/SimulatorCamera.h"
 #include "simulator/SimulatorFrameGetter.h"
 #include "simulator/SimulatorFrameBuilder.h"
@@ -90,45 +92,59 @@ void Camera::SimuThread::execPrepareAcq()
 void Camera::SimuThread::execStartAcq()
 {
   DEB_MEMBER_FUNCT();
+  
+  try
+  {
+    StdBufferCbMgr &buffer_mgr = m_simu->m_buffer_ctrl_obj.getBuffer();
+    buffer_mgr.setStartTimestamp(Timestamp::now());
 
-  StdBufferCbMgr &buffer_mgr = m_simu->m_buffer_ctrl_obj.getBuffer();
-  buffer_mgr.setStartTimestamp(Timestamp::now());
+    FrameGetter *frame_getter = m_simu->m_frame_getter;
+    frame_getter->resetFrameNr(m_acq_frame_nb);
 
-  FrameGetter *frame_getter = m_simu->m_frame_getter;
-  frame_getter->resetFrameNr(m_acq_frame_nb);
+    int nb_frames = m_simu->m_trig_mode == IntTrig ? m_simu->m_nb_frames : m_acq_frame_nb + 1;
+    int &frame_nb = m_acq_frame_nb;
+    for (; (nb_frames == 0) || (frame_nb < nb_frames); frame_nb++) {
+      if (getNextCmd() == StopAcq) {
+        waitNextCmd();
+        break;
+      }
+      double req_time;
+      req_time = m_simu->m_exp_time;
+      if (req_time > 1e-6) {
+        setStatus(Exposure);
+        usleep(long(req_time * 1e6));
+      }
 
-  int nb_frames = m_simu->m_trig_mode == IntTrig ? m_simu->m_nb_frames : m_acq_frame_nb + 1;
-  int &frame_nb = m_acq_frame_nb;
-  for (; (nb_frames == 0) || (frame_nb < nb_frames); frame_nb++) {
-    if (getNextCmd() == StopAcq) {
-      waitNextCmd();
-      break;
+      setStatus(Readout);
+      unsigned char *ptr = reinterpret_cast<unsigned char *>(buffer_mgr.getFrameBufferPtr(frame_nb));
+      
+      FrameDim frame_dim = buffer_mgr.getFrameDim();
+      DEB_TRACE() << DEB_VAR1(frame_dim);
+
+      // Get the next frame
+      bool res = frame_getter->getNextFrame(ptr);
+      if (!res)
+        throw LIMA_HW_EXC(InvalidValue, "Failed to get next frame");
+
+      HwFrameInfoType frame_info;
+      frame_info.acq_frame_nb = frame_nb;
+      
+      DEB_TRACE() << DEB_VAR1(frame_info);
+      
+      buffer_mgr.newFrameReady(frame_info);
+
+      req_time = m_simu->m_lat_time;
+      if (req_time > 1e-6) {
+        setStatus(Latency);
+        usleep(long(req_time * 1e6));
+      }
     }
-    double req_time;
-    req_time = m_simu->m_exp_time;
-    if (req_time > 1e-6) {
-      setStatus(Exposure);
-      usleep(long(req_time * 1e6));
-    }
-
-    setStatus(Readout);
-    unsigned char *ptr = reinterpret_cast<unsigned char *>(buffer_mgr.getFrameBufferPtr(frame_nb));
-
-    // Get the next frame
-    bool res = frame_getter->getNextFrame(ptr);
-    if (!res) throw LIMA_HW_EXC(InvalidValue, "Failed to get next frame");
-
-    HwFrameInfoType frame_info;
-    frame_info.acq_frame_nb = frame_nb;
-    buffer_mgr.newFrameReady(frame_info);
-
-    req_time = m_simu->m_lat_time;
-    if (req_time > 1e-6) {
-      setStatus(Latency);
-      usleep(long(req_time * 1e6));
-    }
+    setStatus(Ready);
   }
-  setStatus(Ready);
+  catch (Exception &e) {
+    DEB_ERROR() << e;
+    setStatus(Fault);
+  }
 }
 
 Camera::Camera(const Mode &mode) : m_mode(mode), m_frame_getter(NULL), m_thread(*this)
@@ -297,6 +313,8 @@ HwInterface::StatusType::Basic Camera::getStatus()
     return HwInterface::StatusType::Readout;
   case SimuThread::Latency:
     return HwInterface::StatusType::Latency;
+  case SimuThread::Fault:
+    return HwInterface::StatusType::Fault;
   default:
     THROW_HW_ERROR(Error) << "Invalid thread status";
   }

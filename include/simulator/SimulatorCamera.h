@@ -115,6 +115,7 @@ private:
       Exposure,
       Readout,
       Latency,
+      Fault,
     };
 
     enum { // Cmd
