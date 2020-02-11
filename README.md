@@ -12,11 +12,15 @@ This is the LImA camera simulator. It can help you getting started with LImA and
 
 ### Camera python
 
+```bash
 conda install -c esrf-bcu lima-camera-simulator
+```
 
 ### Camera tango device server
 
+```bash
 conda install -c tango-controls -c esrf-bcu lima-camera-simulator-tango
+```
 
 # LImA
 
@@ -27,5 +31,3 @@ Lima is a C++ library which can be used with many different cameras. The library
 ## Documentation
 
 The documentation is available [here](https://lima.blissgarden.org)
-
-

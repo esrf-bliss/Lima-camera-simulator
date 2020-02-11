@@ -33,6 +33,8 @@ build-noarch:
   dependencies:
     - build-linux
     - build-win
+  tags:
+    - linux
 
 deploy-devel:
   stage: deploy
