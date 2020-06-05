@@ -57,6 +57,7 @@ public:
     
 private:
     FrameLoaderPrefetched();
+    FrameLoaderPrefetched(const FrameLoaderPrefetched&);
 };
 
 
@@ -126,6 +127,7 @@ public:
   
 private:
     FrameBuilderPrefetched();
+    FrameBuilderPrefetched(const FrameBuilderPrefetched&);
 };
 
 };

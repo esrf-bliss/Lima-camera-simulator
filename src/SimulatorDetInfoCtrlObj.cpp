@@ -76,13 +76,17 @@ void DetInfoCtrlObj::getDetectorModel(std::string &det_model)
 
 void DetInfoCtrlObj::registerMaxImageSizeCallback(HwMaxImageSizeCallback &cbk)
 {
+  DEB_MEMBER_FUNCT();
+  
   // Save the callback for future use by the frame getters (e.g. loader)
   m_simu.setHwMaxImageSizeCallback(cbk);
 }
 
-void DetInfoCtrlObj::unregisterMaxImageSizeCallback(HwMaxImageSizeCallback &cb)
+void DetInfoCtrlObj::unregisterMaxImageSizeCallback(HwMaxImageSizeCallback &cbk)
 {
+  DEB_MEMBER_FUNCT();
+  
   // Register call back for the frame loader
   FrameLoader *loader = m_simu.getFrameLoader();
-  if (loader) loader->unregisterMaxImageSizeCallback(cb);
+  if (loader) loader->unregisterMaxImageSizeCallback(cbk);
 }

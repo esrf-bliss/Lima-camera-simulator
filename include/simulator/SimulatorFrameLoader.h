@@ -46,10 +46,13 @@ class SIMULATOR_EXPORT FrameLoader : public FrameGetter, public HwMaxImageSizeCa
 public:
   static const bool is_thread_safe = false;
 
-  FrameLoader(HwMaxImageSizeCallback &cbk) : m_frame_nr(0), m_mis_cb_act(false), m_current_stream(std::make_shared<std::ifstream>())
+  FrameLoader() : m_current_stream(std::make_shared<std::ifstream>()), m_frame_nr(0), m_mis_cb_act(false) {}
+  
+  void setHwMaxImageSizeCallback(HwMaxImageSizeCallback &cbk) override
   {
+    DEB_MEMBER_FUNCT();
     registerMaxImageSizeCallback(cbk);
-  }
+  } 
 
   Camera::Mode getMode() const { return Camera::MODE_LOADER; }
 
@@ -71,21 +74,19 @@ public:
   void getMaxImageSize(Size &max_image_size) const { max_image_size = m_frame_dim.getSize(); }
 
 protected:
-  virtual void setMaxImageSizeCallbackActive(bool cb_active)
+  void setMaxImageSizeCallbackActive(bool cb_active) override
   {
     DEB_MEMBER_FUNCT();
     m_mis_cb_act = cb_active;
   }
 
 private:
-  std::string m_file_pattern; //<! The file pattern use to load the frames
-
   typedef std::vector<std::string> files_t;
-  std::string m_folder;                      //<! The folder where the files lives
-  files_t m_files;                           //<! The filenames that matche the pattern above
+    
+  std::string m_file_pattern;                //<! The file pattern used to load the frames
+  files_t m_files;                           //<! The filenames that matches the pattern above
   files_t::const_iterator m_it_current_file; //<! An iterator to the filename that is currently read
 
-  // std::ifstream m_current_stream;             //<! The current stream
   std::shared_ptr<std::ifstream> m_current_stream; //<! The current stream
 
   unsigned long m_frame_nr;

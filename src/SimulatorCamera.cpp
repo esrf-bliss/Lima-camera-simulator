@@ -73,6 +73,7 @@ void Camera::SimuThread::execCmd(int cmd)
     execStartAcq();
     break;
   case StopAcq:
+  case Reset:
     setStatus(Ready);
     break;
   }
@@ -82,19 +83,26 @@ void Camera::SimuThread::execPrepareAcq()
 {
   DEB_MEMBER_FUNCT();
 
-  m_acq_frame_nb = 0;
-  setStatus(Prepare);
+  setStatus(Preparing);
 
-  // Delegate to the frame getter that may need some preparation
-  m_simu->m_frame_getter->prepareAcq();
+  try {
+    m_acq_frame_nb = 0;
+
+    // Delegate to the frame getter that may need some preparation
+    m_simu->m_frame_getter->prepareAcq();
+
+    setStatus(Prepare);
+  } catch (Exception &e) {
+    DEB_ERROR() << e;
+    setStatus(Fault);
+  }
 }
 
 void Camera::SimuThread::execStartAcq()
 {
   DEB_MEMBER_FUNCT();
   
-  try
-  {
+  try {
     StdBufferCbMgr &buffer_mgr = m_simu->m_buffer_ctrl_obj.getBuffer();
     buffer_mgr.setStartTimestamp(Timestamp::now());
 
@@ -140,14 +148,13 @@ void Camera::SimuThread::execStartAcq()
       }
     }
     setStatus(Ready);
-  }
-  catch (Exception &e) {
+  } catch (Exception &e) {
     DEB_ERROR() << e;
     setStatus(Fault);
   }
 }
 
-Camera::Camera(const Mode &mode) : m_mode(mode), m_frame_getter(NULL), m_thread(*this)
+Camera::Camera(const Mode &mode) : m_mode(mode), m_frame_getter(NULL), m_cbk(NULL), m_thread(*this)
 {
   DEB_CONSTRUCTOR();
 
@@ -170,36 +177,43 @@ void Camera::setDefaultProperties()
 
 void Camera::constructFrameGetter()
 {
-  assert(m_cbk != NULL);
-  
+  DEB_MEMBER_FUNCT();
+
   switch (m_mode) {
   case Mode::MODE_GENERATOR:
-    m_frame_getter = new FrameBuilder(*m_cbk);
+    m_frame_getter = new FrameBuilder();
     break;
 
   case Mode::MODE_GENERATOR_PREFETCH:
-    m_frame_getter = new FramePrefetcher<FrameBuilder>(*m_cbk);
+    m_frame_getter = new FramePrefetcher<FrameBuilder>();
     break;
 
   case Mode::MODE_LOADER:
-    m_frame_getter = new FrameLoader(*m_cbk);
+    m_frame_getter = new FrameLoader();
     break;
 
   case Mode::MODE_LOADER_PREFETCH:
-    m_frame_getter = new FramePrefetcher<FrameLoader>(*m_cbk);
+    m_frame_getter = new FramePrefetcher<FrameLoader>();
     break;
   }
+  
+  // The callback might not have been set at this point
+  if (m_cbk)
+    m_frame_getter->setHwMaxImageSizeCallback(*m_cbk);
 }
 
 Camera::~Camera()
 {
   DEB_DESTRUCTOR();
 
-  delete m_frame_getter;
+  if (m_frame_getter)
+    delete m_frame_getter;
 }
 
 void Camera::setMode(const Mode &mode)
 {
+  DEB_MEMBER_FUNCT();
+
   if (mode != m_mode) {
     delete m_frame_getter;
 
@@ -210,12 +224,22 @@ void Camera::setMode(const Mode &mode)
 
 void Camera::setFrameDim(const FrameDim &frame_dim)
 {
+  DEB_MEMBER_FUNCT();
+
   m_frame_getter->setFrameDim(frame_dim);
 }
 
 void Camera::getFrameDim(FrameDim &frame_dim)
 {
   m_frame_getter->getFrameDim(frame_dim);
+}
+
+void Camera::setHwMaxImageSizeCallback(HwMaxImageSizeCallback &cbk)
+{
+  DEB_MEMBER_FUNCT();
+
+  m_cbk = &cbk;
+  m_frame_getter->setHwMaxImageSizeCallback(cbk);
 }
 
 void Camera::getMaxImageSize(Size &max_image_size) const
@@ -257,7 +281,8 @@ void Camera::getDetectorModel(std::string &det_model) const
 
 void Camera::setNbFrames(int nb_frames)
 {
-  if (nb_frames < 0) throw LIMA_HW_EXC(InvalidValue, "Invalid nb of frames");
+  if (nb_frames < 0)
+    throw LIMA_HW_EXC(InvalidValue, "Invalid nb of frames");
 
   m_nb_frames = nb_frames;
 }
@@ -269,7 +294,8 @@ void Camera::getNbFrames(int &nb_frames)
 
 void Camera::setExpTime(double exp_time)
 {
-  if (exp_time <= 0) throw LIMA_HW_EXC(InvalidValue, "Invalid exposure time");
+  if (exp_time <= 0)
+    throw LIMA_HW_EXC(InvalidValue, "Invalid exposure time");
 
   m_exp_time = exp_time;
 }
@@ -293,7 +319,12 @@ void Camera::getLatTime(double &lat_time)
 
 void Camera::reset()
 {
-  stopAcq();
+  if (m_thread.getStatus() == SimuThread::Fault) {
+    m_thread.sendCmd(SimuThread::Reset);
+    m_thread.waitStatus(SimuThread::Ready);
+  } else {
+    stopAcq();
+  }
 
   setDefaultProperties();
 }
@@ -324,32 +355,51 @@ void Camera::prepareAcq()
 {
   DEB_MEMBER_FUNCT();
 
-  if (m_thread.getStatus() == SimuThread::Prepare) return;
-  if (m_thread.getStatus() != SimuThread::Ready) THROW_HW_ERROR(Error) << "Camera not Ready";
+  switch (m_thread.getStatus()) {
+  case SimuThread::Prepare:
+  case SimuThread::Ready:
+  case SimuThread::Fault:
+    break;
+  default:
+    THROW_HW_ERROR(Error) << "Camera not in Ready/Fault/Prepare status";
+  }
+
   m_thread.sendCmd(SimuThread::PrepareAcq);
-  m_thread.waitStatus(SimuThread::Prepare);
+  m_thread.waitStatus(SimuThread::Preparing);
+  if (m_thread.waitNotStatus(SimuThread::Preparing) != SimuThread::Prepare)
+     THROW_HW_ERROR(Error) << "Prepare failed";
 }
 
 void Camera::startAcq()
 {
   DEB_MEMBER_FUNCT();
 
-  if ((m_thread.getStatus() != SimuThread::Prepare) && (m_thread.getStatus() != SimuThread::Ready))
+  int thread_status = m_thread.getStatus();
+  if ((thread_status != SimuThread::Prepare) &&
+      (thread_status != SimuThread::Ready))
     THROW_HW_ERROR(Error) << "Camera not Prepared nor Ready (Multi Trigger)";
 
   m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
 
   m_thread.sendCmd(SimuThread::StartAcq);
-  m_thread.waitNotStatus(SimuThread::Prepare);
+  if (m_thread.waitNotStatus(thread_status) == SimuThread::Fault)
+    THROW_HW_ERROR(Error) << "StartAcq failed";
 }
 
 void Camera::stopAcq()
 {
   DEB_MEMBER_FUNCT();
 
-  if (m_thread.getStatus() != SimuThread::Ready) {
+  switch (m_thread.getStatus()) {
+  case SimuThread::Exposure:
+  case SimuThread::Readout:
+  case SimuThread::Latency:
     m_thread.sendCmd(SimuThread::StopAcq);
     m_thread.waitStatus(SimuThread::Ready);
+    break;
+
+  case SimuThread::Fault:
+    THROW_HW_ERROR(Error) << "Camera not in Fault status";
   }
 }
 

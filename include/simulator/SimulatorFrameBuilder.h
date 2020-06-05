@@ -70,7 +70,7 @@ public:
 
   typedef std::vector<struct GaussPeak> PeakList;
 
-  FrameBuilder(HwMaxImageSizeCallback &cbk);
+  FrameBuilder();
   FrameBuilder(FrameDim &frame_dim, Bin &bin, Roi &roi, const PeakList &peaks, double grow_factor);
   ~FrameBuilder();
 

@@ -34,6 +34,8 @@ namespace Simulator {
 
 /// Control object providing simulator detector info interface
 class SIMULATOR_EXPORT DetInfoCtrlObj : public HwDetInfoCtrlObj {
+  DEB_CLASS_NAMESPC(DebModCamera, "DetInfoCtrlObj", "Simulator");
+
 public:
   DetInfoCtrlObj(Camera &simu) : m_simu(simu) {}
 

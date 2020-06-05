@@ -25,6 +25,8 @@
 
 #include <lima/SizeUtils.h>
 
+#include <simulator_export.h>
+
 #include "SimulatorCamera.h"
 
 namespace lima {
@@ -36,7 +38,8 @@ class Exception;
 namespace Simulator {
 
 /// This interface describes a way to get the next frame buffer
-struct FrameGetter {
+struct SIMULATOR_EXPORT FrameGetter {
+  virtual ~FrameGetter() {}
 
   virtual Camera::Mode getMode() const = 0;
 
@@ -51,6 +54,10 @@ struct FrameGetter {
   virtual void getFrameDim(FrameDim &frame_dim) const = 0;
 
   virtual void getMaxImageSize(Size &max_image_size) const = 0;
+  
+  virtual void setHwMaxImageSizeCallback(HwMaxImageSizeCallback &cbk) { m_cbk = &cbk; }
+  
+  HwMaxImageSizeCallback *m_cbk; //<! Keep a reference of the HwMaxImageSizeCallback
 };
 
 } // namespace Simulator

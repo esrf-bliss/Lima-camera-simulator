@@ -25,6 +25,9 @@
 #if !defined(SIMULATOR_FRAMEPREFETCHER_H)
 #define SIMULATOR_FRAMEPREFETCHER_H
 
+#include <cassert>
+
+#include <memory>
 #include <sstream>
 #include <vector>
 
@@ -45,9 +48,13 @@ template <class FrameGetterImpl>
 class FramePrefetcher : public FrameGetterImpl {
   DEB_CLASS_NAMESPC(DebModCamera, "FramePrefetcher", "Simulator");
 
+  typedef std::unique_ptr<unsigned char[]> buffer_t;
+
 public:
-  FramePrefetcher(HwMaxImageSizeCallback &cbk) : FrameGetterImpl(cbk), m_frame_nr(0) {}
-  ~FramePrefetcher() { cleanupPrebuiltFrames(); }
+  FramePrefetcher() : m_frame_nr(0) {}
+
+  FramePrefetcher(const FramePrefetcher &) = delete;
+  FramePrefetcher & operator=(const FramePrefetcher &) = delete;
 
   Camera::Mode getMode() const { return static_cast<Camera::Mode>(FrameGetterImpl::getMode() + 1); }
 
@@ -75,12 +82,12 @@ public:
 
       // Allocate the buffers for the prebuilt frames
       const int mem_size = frame_dim.getMemSize();
-      for (unsigned char *&frame_buffer : m_prefetched_frame_buffers) {
-        frame_buffer = new unsigned char[mem_size];
+      for (buffer_t& frame_buffer : m_prefetched_frame_buffers) {
+        frame_buffer = std::make_unique<unsigned char[]>(mem_size);
 
-        if (frame_buffer == NULL) {
+        if (!frame_buffer) {
           std::ostringstream msg;
-          msg << "Attempting to allocate Simulator buffers for prebuilt frames failed:" << DEB_VAR1(mem_size);
+          msg << "Attempting to allocate Simulator buffers for prefetched frames failed:" << DEB_VAR1(mem_size);
           throw LIMA_EXC(CameraPlugin, Error, msg.str());
         }
       }
@@ -89,17 +96,20 @@ public:
 // Parallel for loop
 #pragma omp parallel for
         for (int i = 0; i < m_prefetched_frame_buffers.size(); i++)
-          FrameGetterImpl::getNextFrame(m_prefetched_frame_buffers[i]);
+          FrameGetterImpl::getNextFrame(m_prefetched_frame_buffers[i].get());
       } else
         // Serial for loop
-        for (int i = 0; i < m_prefetched_frame_buffers.size(); i++)
-          FrameGetterImpl::getNextFrame(m_prefetched_frame_buffers[i]);
+        for (size_t i = 0; i < m_prefetched_frame_buffers.size(); i++)
+          FrameGetterImpl::getNextFrame(m_prefetched_frame_buffers[i].get());
     }
   }
 
   bool getNextFrame(unsigned char *ptr)
   {
-    ptr = m_prefetched_frame_buffers[m_frame_nr % m_prefetched_frame_buffers.size()];
+    unsigned long idx = m_frame_nr % m_prefetched_frame_buffers.size();
+    assert(idx < m_prefetched_frame_buffers.size());
+      
+    ptr = m_prefetched_frame_buffers[idx].get();
     ++m_frame_nr;
     return true;
   }
@@ -109,14 +119,7 @@ public:
 
 private:
   unsigned long m_frame_nr;                                //<! The current frame number
-  std::vector<unsigned char *> m_prefetched_frame_buffers; //<! A vector of frame buffers
-
-  void cleanupPrebuiltFrames()
-  {
-    // Clean up the prebuilt frames
-    for (const unsigned char *p : m_prefetched_frame_buffers)
-      delete[] p;
-  }
+  std::vector<buffer_t> m_prefetched_frame_buffers; //<! A vector of frame buffers
 };
 
 } // namespace Simulator

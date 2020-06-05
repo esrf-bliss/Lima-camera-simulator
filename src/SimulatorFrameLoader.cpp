@@ -52,6 +52,8 @@
 using namespace lima;
 using namespace lima::Simulator;
 
+DEB_GLOBAL(DebModCamera);
+
 // Note: Use Boost string algo rather than this
 /// Trim both sides of a string using std::isspace
 static std::string &trim(std::string &&s)
@@ -64,6 +66,8 @@ static std::string &trim(std::string &&s)
 // Parse EDf header and add the result to headers map
 static std::streamsize parseEDFHeader(std::istream &input_file, std::map<std::string, std::string> &headers)
 {
+  DEB_GLOBAL_FUNCT();
+  
   std::stringstream ss;
   std::string buffer(1024, '\0');
 
@@ -98,6 +102,8 @@ static std::streamsize parseEDFHeader(std::istream &input_file, std::map<std::st
 
 static ImageType getImageType(const std::string &type)
 {
+  DEB_GLOBAL_FUNCT();
+  
   ImageType res;
 
   if (type == "UnsignedByte")
@@ -126,15 +132,16 @@ static ImageType getImageType(const std::string &type)
   return res;
 }
 
-static void findFiles(const std::string &path_pattern, std::string &folder, std::vector<std::string> &files)
+static void findFiles(const std::string &path_pattern, std::vector<std::string> &files)
 {
+  DEB_GLOBAL_FUNCT();
+  
   if (path_pattern.empty()) return;
 
 #if defined(WIN32)
-  // Extra the folder part
-  folder = path_pattern;
+  // Extract the folder part
+  std::string folder = path_pattern;
   folder.push_back('\0');
-  ;
   PathRemoveFileSpec(&folder[0]);
 
   WIN32_FIND_DATA FindFileData;
@@ -176,7 +183,7 @@ void FrameLoader::setFilePattern(const std::string &file_pattern)
   m_files.clear();
 
   // Find the files using the new pattern
-  findFiles(file_pattern, m_folder, m_files);
+  findFiles(file_pattern, m_files);
 
   if (!m_files.empty()) {
     // Get the first file
@@ -202,7 +209,7 @@ void FrameLoader::setFilePattern(const std::string &file_pattern)
       if (!input_file.is_open()) throw LIMA_EXC(CameraPlugin, Error, "Failed to open EDF file");
 
       std::map<std::string, std::string> headers;
-      std::streamsize data_pos = parseEDFHeader(input_file, headers);
+      parseEDFHeader(input_file, headers);
 
       Point p;
       p.x  = std::stoi(headers["Dim_1"]); // C++11
@@ -224,6 +231,8 @@ void FrameLoader::setFilePattern(const std::string &file_pattern)
     if (m_mis_cb_act)
       // Signal LiMA core that the frame properties may have changed
       maxImageSizeChanged(size, image_type);
+    else
+      DEB_WARNING() << "Image size callback is not active";
   } else
     throw LIMA_EXC(CameraPlugin, Error, "No file found with the given pattern");
 }
@@ -233,12 +242,18 @@ void FrameLoader::prepareAcq()
   DEB_MEMBER_FUNCT();
 
   if (!m_files.empty()) {
+    if (m_current_stream->is_open())
+      // Close the current file
+      m_current_stream->close();
+    
     // Position the iterator
     m_it_current_file = m_files.begin();
 
     // Open the file
     m_current_stream->open(m_it_current_file->c_str(), std::ios::binary);
     DEB_TRACE() << "Open file " << *m_it_current_file;
+    if (!m_current_stream->is_open())
+      throw LIMA_EXC(CameraPlugin, Error, "Failed to open file");
   }
 }
 
@@ -267,6 +282,8 @@ bool FrameLoader::getNextFrame(unsigned char *ptr)
 
     if (extension == ".edf") {
       if (m_current_stream->peek() == EOF) {
+        DEB_TRACE() << "EOF " << *m_it_current_file << " skip to next file";
+        
         m_current_stream->close();
 
         // Skip to next file
@@ -277,6 +294,8 @@ bool FrameLoader::getNextFrame(unsigned char *ptr)
           // Open next file
           m_current_stream->open(m_it_current_file->c_str(), std::ios::binary);
           DEB_TRACE() << "Open file " << *m_it_current_file;
+          if (!m_current_stream->is_open())
+            throw LIMA_EXC(CameraPlugin, Error, "Failed to open file");
         }
         else
           throw LIMA_EXC(CameraPlugin, Error, "End of file list");
@@ -288,7 +307,7 @@ bool FrameLoader::getNextFrame(unsigned char *ptr)
 
       // Parse the header
       std::map<std::string, std::string> headers;
-      std::streamsize data_pos = parseEDFHeader(*m_current_stream, headers);
+      parseEDFHeader(*m_current_stream, headers);
 
       Point p;
       p.x  = std::stoi(headers["Dim_1"]); // C++11

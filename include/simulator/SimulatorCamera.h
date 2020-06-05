@@ -101,9 +101,9 @@ public:
   int getNbAcquiredFrames();
 
   void reset();
-  
-  void setHwMaxImageSizeCallback(HwMaxImageSizeCallback &cbk) { m_cbk = &cbk; }
-  
+
+  void setHwMaxImageSizeCallback(HwMaxImageSizeCallback &cbk);
+
 private:
   class SimuThread : public CmdThread {
     DEB_CLASS_NAMESPC(DebModCamera, "Camera", "SimuThread");
@@ -111,6 +111,7 @@ private:
   public:
     enum { // Status
       Ready = MaxThreadStatus,
+      Preparing,
       Prepare,
       Exposure,
       Readout,
@@ -122,6 +123,7 @@ private:
       PrepareAcq = MaxThreadCmd,
       StartAcq,
       StopAcq,
+      Reset,
     };
 
     SimuThread(Camera &simu);
@@ -152,12 +154,13 @@ private:
   TrigMode m_trig_mode;
 
   SoftBufferCtrlObj m_buffer_ctrl_obj;
-  SimuThread m_thread;
 
   Mode m_mode;                 //<! The current mode of the simulateur
   FrameGetter *m_frame_getter; //<! The current frame getter (according to the mode)
 
-  HwMaxImageSizeCallback *m_cbk; //<! Keep a reference of the HwMaxImageSizeCallback
+  HwMaxImageSizeCallback *m_cbk; //<! Keep a reference to the HwMaxImageSizeCallback (used when switching between FrameGetter)
+  
+  SimuThread m_thread;
 };
 
 SIMULATOR_EXPORT std::ostream &operator<<(std::ostream &os, Camera &simu);

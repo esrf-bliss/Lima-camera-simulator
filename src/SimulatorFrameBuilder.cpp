@@ -43,7 +43,7 @@ using namespace std;
  * @brief FrameBuilder class default constructor
  *
  *******************************************************************/
-FrameBuilder::FrameBuilder(HwMaxImageSizeCallback &cbk)
+FrameBuilder::FrameBuilder()
 {
   FrameDim frame_dim = FrameDim(1024, 1024, Bpp32);
   Bin bin            = Bin(1, 1);
