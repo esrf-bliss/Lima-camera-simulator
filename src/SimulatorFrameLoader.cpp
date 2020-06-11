@@ -64,16 +64,19 @@ static std::string &trim(std::string &&s)
 }
 
 // Parse EDf header and add the result to headers map
-static std::streamsize parseEDFHeader(std::istream &input_file, std::map<std::string, std::string> &headers)
+// Parse EDF header and add the result to headers map
+static void parseEDFHeader(std::istream& input_file, std::map<std::string, std::string>& headers)
 {
   DEB_GLOBAL_FUNCT();
-  
-  std::stringstream ss;
-  std::string buffer(1024, '\0');
+
+  // Assume the header to be a multiple of 512 bytes
+  std::string buffer(512, '\0');
 
   input_file.read(&buffer[0], buffer.size());
-  if (buffer[0] != '{') throw LIMA_EXC(CameraPlugin, Error, "Invalid EDF file");
+  if (buffer[0] != '{')
+    throw LIMA_EXC(CameraPlugin, Error, "Invalid EDF file");
 
+  std::stringstream ss;
   ss << buffer;
 
   // More buffer in header?
@@ -89,15 +92,14 @@ static std::streamsize parseEDFHeader(std::istream &input_file, std::map<std::st
 
     // Get rid of any comment
     std::string::size_type comment = line.rfind(';');
-    if (comment != std::string::npos) line.resize(comment);
+    if (comment != std::string::npos)
+      line.resize(comment);
 
     // Tokenize
     std::string::size_type token_pos = line.find('=');
     if (token_pos != std::string::npos)
       headers.insert(std::make_pair(trim(line.substr(0, token_pos)), trim(line.substr(token_pos + 1))));
   }
-
-  return input_file.tellg();
 }
 
 static ImageType getImageType(const std::string &type)

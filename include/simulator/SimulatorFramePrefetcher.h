@@ -26,6 +26,7 @@
 #define SIMULATOR_FRAMEPREFETCHER_H
 
 #include <cassert>
+#include <cstring>
 
 #include <memory>
 #include <sstream>
@@ -70,6 +71,8 @@ public:
 
   void prepareAcq()
   {
+    DEB_MEMBER_FUNCT();
+
     // Call implementation preparation
     FrameGetterImpl::prepareAcq();
 
@@ -81,13 +84,13 @@ public:
       FrameGetterImpl::getFrameDim(frame_dim);
 
       // Allocate the buffers for the prebuilt frames
-      const int mem_size = frame_dim.getMemSize();
+      m_mem_size = frame_dim.getMemSize();
       for (buffer_t& frame_buffer : m_prefetched_frame_buffers) {
-        frame_buffer = std::make_unique<unsigned char[]>(mem_size);
+        frame_buffer = std::make_unique<unsigned char[]>(m_mem_size);
 
         if (!frame_buffer) {
           std::ostringstream msg;
-          msg << "Attempting to allocate Simulator buffers for prefetched frames failed:" << DEB_VAR1(mem_size);
+          msg << "Attempting to allocate Simulator buffers for prefetched frames failed:" << DEB_VAR1(m_mem_size);
           throw LIMA_EXC(CameraPlugin, Error, msg.str());
         }
       }
@@ -106,10 +109,14 @@ public:
 
   bool getNextFrame(unsigned char *ptr)
   {
+    DEB_MEMBER_FUNCT();
+
     unsigned long idx = m_frame_nr % m_prefetched_frame_buffers.size();
     assert(idx < m_prefetched_frame_buffers.size());
-      
-    ptr = m_prefetched_frame_buffers[idx].get();
+
+    unsigned char *src = m_prefetched_frame_buffers[idx].get();
+    std::memcpy(ptr, src, m_mem_size);
+
     ++m_frame_nr;
     return true;
   }
@@ -118,8 +125,9 @@ public:
   void resetFrameNr(unsigned long frame_nr = 0) { m_frame_nr = frame_nr; };
 
 private:
-  unsigned long m_frame_nr;                                //<! The current frame number
-  std::vector<buffer_t> m_prefetched_frame_buffers; //<! A vector of frame buffers
+  unsigned long m_frame_nr;                           //<! The current frame number
+  std::vector<buffer_t> m_prefetched_frame_buffers;   //<! A vector of frame buffers
+  int m_mem_size;                                     //<! The size of a mem buffer
 };
 
 } // namespace Simulator
