@@ -81,7 +81,7 @@ public:
       FrameDim frame_dim;
 
       // Get the frame dimension
-      FrameGetterImpl::getFrameDim(frame_dim);
+      FrameGetterImpl::getEffectiveFrameDim(frame_dim);
 
       // Allocate the buffers for the prebuilt frames
       m_mem_size = frame_dim.getMemSize();

@@ -172,6 +172,18 @@ void FrameBuilder::getFrameDim(FrameDim &dim) const
 }
 
 /**
+ * @brief Gets the effective (real) frame dimention
+ *
+ * @param[out] dim  FrameDim object reference
+ *******************************************************************/
+void FrameBuilder::getEffectiveFrameDim(FrameDim &dim) const
+{
+  dim = m_frame_dim / m_bin;
+  if (!m_roi.isEmpty())
+    dim.setSize(m_roi.getSize());
+}
+
+/**
  * @brief Sets frame dimention
  *
  * @param[in] dim  FrameDim object reference
@@ -564,7 +576,7 @@ void FrameBuilder::fillData(unsigned char *ptr)
   depth *p   = (depth *)ptr;
   double data, max;
 
-  if (!m_roi.getSize().isEmpty()) {
+  if (!m_roi.isEmpty()) {
     bx0 = m_roi.getTopLeft().x;
     bxM = m_roi.getBottomRight().x + 1;
     by0 = m_roi.getTopLeft().y;

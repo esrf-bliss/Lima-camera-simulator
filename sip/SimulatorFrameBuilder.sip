@@ -139,6 +139,8 @@ public:
 	void getFrameDim( FrameDim &dim /Out/ ) const;
 	void setFrameDim( const FrameDim &dim );
 
+	void getEffectiveFrameDim(FrameDim &dim /Out/ ) const;
+
 	unsigned long getFrameNr();
 	void resetFrameNr( int frame_nr=0 );
 

@@ -79,6 +79,8 @@ public:
   void getFrameDim(FrameDim &dim) const;
   void setFrameDim(const FrameDim &dim);
 
+  void getEffectiveFrameDim(FrameDim &dim) const;
+
   void getBin(Bin &bin) const;
   void setBin(const Bin &bin);
   void checkBin(Bin &bin) const;

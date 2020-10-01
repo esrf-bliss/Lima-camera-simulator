@@ -36,6 +36,8 @@ public:
     void setFrameDim(const FrameDim& frame_dim);
     void getFrameDim(FrameDim& frame_dim /Out/) const;
 
+    void getEffectiveFrameDim(FrameDim &frame_dim /Out/) const;
+
     void getMaxImageSize(Size& max_image_size /Out/) const;
 
     void setFilePattern(const std::string& file_pattern);

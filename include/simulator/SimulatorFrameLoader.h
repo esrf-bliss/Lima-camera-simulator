@@ -71,6 +71,8 @@ public:
   }
   void getFrameDim(FrameDim &frame_dim) const { frame_dim = m_frame_dim; }
 
+  void getEffectiveFrameDim(FrameDim &frame_dim) const { frame_dim = m_frame_dim; }
+
   void getMaxImageSize(Size &max_image_size) const { max_image_size = m_frame_dim.getSize(); }
 
 protected:

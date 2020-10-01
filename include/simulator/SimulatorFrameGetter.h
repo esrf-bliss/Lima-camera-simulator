@@ -53,6 +53,8 @@ struct SIMULATOR_EXPORT FrameGetter {
   virtual void setFrameDim(const FrameDim &frame_dim) = 0;
   virtual void getFrameDim(FrameDim &frame_dim) const = 0;
 
+  virtual void getEffectiveFrameDim(FrameDim &frame_dim) const = 0;
+
   virtual void getMaxImageSize(Size &max_image_size) const = 0;
   
   virtual void setHwMaxImageSizeCallback(HwMaxImageSizeCallback &cbk) { m_cbk = &cbk; }
