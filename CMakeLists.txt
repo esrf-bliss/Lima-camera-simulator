@@ -84,6 +84,7 @@ add_library(simulator SHARED
   src/SimulatorDetInfoCtrlObj.cpp
   src/SimulatorShutterCtrlObj.cpp
   src/SimulatorBinCtrlObj.cpp
+  src/SimulatorRoiCtrlObj.cpp
   ${SIMU_INCS}
 )
 

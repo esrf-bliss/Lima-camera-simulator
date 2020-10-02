@@ -22,52 +22,37 @@
 
 #pragma once
 
-#if !defined(SIMULATOR_HWINTERFACE_H)
-#define SIMULATOR_HWINTERFACE_H
+#if !defined(SIMULATOR_ROICTRLOBJ_H)
+#define SIMULATOR_ROICTRLOBJ_H
 
-#include "lima/HwInterface.h"
+#include <lima/HwInterface.h>
 
 #include <simulator_export.h>
 
-#include <simulator/SimulatorBinCtrlObj.h>
-#include <simulator/SimulatorRoiCtrlObj.h>
-#include <simulator/SimulatorSyncCtrlObj.h>
-#include <simulator/SimulatorSyncCtrlObj.h>
-#include <simulator/SimulatorDetInfoCtrlObj.h>
-#include <simulator/SimulatorShutterCtrlObj.h>
-
 namespace lima {
+
+// Forward definitions
+class HwInterface;
+
 namespace Simulator {
 
-/// Simulator hardware interface
-class SIMULATOR_EXPORT Interface : public HwInterface {
+class Camera;
+
+/// Control object providing simulator roi interface
+class SIMULATOR_EXPORT RoiCtrlObj : public HwRoiCtrlObj {
 public:
-  Interface(Camera &simu);
+  RoiCtrlObj(Camera &simu) : m_simu(simu) {}
 
-  virtual void getCapList(CapList &) const;
-
-  virtual void reset(ResetLevel reset_level);
-  virtual void prepareAcq();
-  virtual void startAcq();
-  virtual void stopAcq();
-  virtual void getStatus(StatusType &status);
-  virtual int getNbHwAcquiredFrames();
-
-  //! get the camera object to access it directly from client
-  Camera &getCamera() { return m_simu; }
+  virtual void setRoi(const Roi &roi);
+  virtual void getRoi(Roi &roi);
+  virtual void checkRoi(const Roi &set_roi, Roi &hw_roi);
 
 private:
   Camera &m_simu;
-  CapList m_cap_list;
-  DetInfoCtrlObj m_det_info;
-  SyncCtrlObj m_sync;
-  BinCtrlObj m_bin;
-  RoiCtrlObj m_roi;
-  ShutterCtrlObj m_shutter;
 };
 
 } // namespace Simulator
 
 } // namespace lima
 
-#endif // !defined(SIMULATOR_HWINTERFACE_H)
+#endif // !defined(SIMULATOR_ROICTRLOBJ_H)
