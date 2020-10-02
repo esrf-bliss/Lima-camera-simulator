@@ -227,10 +227,9 @@ void FrameBuilder::setBin(const Bin &bin)
  *******************************************************************/
 void FrameBuilder::checkBin(Bin &bin) const
 {
-  if ((bin == Bin(1, 1)) || (bin == Bin(1, 2)) || (bin == Bin(2, 1)))
-    bin = Bin(1, 1);
-  else
-    bin = Bin(2, 2);
+  int binX = ((bin.getX() % 2) == 0) ? 2 : 1;
+  int binY = ((bin.getY() % 2) == 0) ? 2 : 1;
+  bin = Bin(binX, binY);
 }
 
 /**
