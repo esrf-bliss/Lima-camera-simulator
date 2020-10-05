@@ -194,6 +194,9 @@ void FrameBuilder::setFrameDim(const FrameDim &dim)
 
   m_frame_dim = dim;
 
+  // Signal LiMA core that the frame properties may have changed
+  maxImageSizeChanged(m_frame_dim.getSize(), m_frame_dim.getImageType());
+
   // Reset Bin and RoI?
 }
 

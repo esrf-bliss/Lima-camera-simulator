@@ -199,7 +199,7 @@ void Camera::constructFrameGetter()
   
   // The callback might not have been set at this point
   if (m_cbk)
-    m_frame_getter->setHwMaxImageSizeCallback(*m_cbk);
+    m_frame_getter->registerMaxImageSizeCallback(*m_cbk);
 }
 
 Camera::~Camera()
@@ -234,12 +234,15 @@ void Camera::getFrameDim(FrameDim &frame_dim)
   m_frame_getter->getFrameDim(frame_dim);
 }
 
-void Camera::setHwMaxImageSizeCallback(HwMaxImageSizeCallback &cbk)
+void Camera::setHwMaxImageSizeCallback(HwMaxImageSizeCallback *cbk)
 {
   DEB_MEMBER_FUNCT();
 
-  m_cbk = &cbk;
-  m_frame_getter->setHwMaxImageSizeCallback(cbk);
+  if (m_cbk && !cbk)
+    m_frame_getter->unregisterMaxImageSizeCallback(*m_cbk);
+  else if (!m_cbk && cbk)
+    m_frame_getter->registerMaxImageSizeCallback(*cbk);
+  m_cbk = cbk;
 }
 
 void Camera::getMaxImageSize(Size &max_image_size) const

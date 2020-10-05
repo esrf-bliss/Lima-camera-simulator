@@ -111,11 +111,33 @@ class Simulator(PyTango.Device_4Impl):
         self.get_device_properties(self.get_device_class())
 
         # Apply properties if any
+        if self.frame_dim:
+            frame_dim = self.getFrameDimFromLongArray(self.frame_dim)
+            _SimuCamera.setFrameDim(frame_dim)
+
         if self.mode and (Simulator._Mode.get(self.mode) != None):
             _SimuCamera.setMode(Simulator._Mode[self.mode])
 
         if 'PREFETCH' in self.mode and self.nb_prefetched_frames:
             _SimuCamera.getFrameGetter().setNbPrefetchedFrames(self.nb_prefetched_frames)
+
+    @Core.DEB_MEMBER_FUNCT
+    def getFrameDimFromLongArray(self, dim_arr):
+        width, height, depth = dim_arr
+        if depth == 1:
+            image_type = Core.Bpp8
+        elif depth == 2:
+            image_type = Core.Bpp16
+        elif depth == 4:
+            image_type = Core.Bpp32
+        else:
+            raise ValueError('Unknown pixel depth: %d' % depth)
+        return Core.FrameDim(width, height, image_type)
+
+    @Core.DEB_MEMBER_FUNCT
+    def getLongArrayFromFrameDim(self, frame_dim):
+        size = frame_dim.getSize()
+        return [size.getWidth(), size.getHeight(), frame_dim.getDepth()]
 
     @Core.DEB_MEMBER_FUNCT
     def getAttrStringValueList(self, attr_name):
@@ -176,20 +198,24 @@ class Simulator(PyTango.Device_4Impl):
             nb_prefetched_frames = 0
         attr.set_value(nb_prefetched_frames)
 
-    # def read_mode(self,attr) :
-    #     invMode = {v: k for k, v in self.__Mode.items()}
-    #     mode = _SimuCamera.getMode()
-    #     attr.set_value(invMode[mode])
-    #
-    # def write_mode(self,attr) :
-    #     mode = attr.get_write_value()
-    #     _SimuCamera.setMode(self.__Mode[mode])
+    def read_frame_dim(self,attr) :
+        frame_dim = _SimuCamera.getFrameDim()
+        dim_arr = self.getLongArrayFromFrameDim(frame_dim)
+        attr.set_value(dim_arr)
+
+    def write_frame_dim(self,attr) :
+        dim_arr = attr.get_write_value()
+        frame_dim = self.getFrameDimFromLongArray(dim_arr)
+        _SimuCamera.setFrameDim(frame_dim)
 
 class SimulatorClass(PyTango.DeviceClass):
 
     class_property_list = {}
 
     device_property_list = {
+        'frame_dim':
+        [PyTango.DevVarLongArray,
+         "Frame dimension in the form: width, height, depth", []],
         'mode':
         [PyTango.DevString,
          "Simulator mode: GENERATOR, GENERATOR_PREFETCH, LOADER, LOADER_PREFETCH",[]],
@@ -218,6 +244,10 @@ class SimulatorClass(PyTango.DeviceClass):
 
     attr_list = {
         # Simulator mode
+        'frame_dim':
+        [[PyTango.DevLong,
+          PyTango.SPECTRUM,
+          PyTango.READ_WRITE, 3]],
         'mode':
         [[PyTango.DevString,
           PyTango.SCALAR,

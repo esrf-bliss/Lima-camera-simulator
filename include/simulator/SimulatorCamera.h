@@ -102,7 +102,7 @@ public:
 
   void reset();
 
-  void setHwMaxImageSizeCallback(HwMaxImageSizeCallback &cbk);
+  void setHwMaxImageSizeCallback(HwMaxImageSizeCallback *cbk);
 
 private:
   class SimuThread : public CmdThread {

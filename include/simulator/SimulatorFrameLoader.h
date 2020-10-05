@@ -40,20 +40,14 @@ namespace lima {
 
 namespace Simulator {
 
-class SIMULATOR_EXPORT FrameLoader : public FrameGetter, public HwMaxImageSizeCallbackGen {
+class SIMULATOR_EXPORT FrameLoader : public FrameGetter {
   DEB_CLASS_NAMESPC(DebModCamera, "FrameLoader", "Simulator");
 
 public:
   static const bool is_thread_safe = false;
 
-  FrameLoader() : m_current_stream(std::make_shared<std::ifstream>()), m_frame_nr(0), m_mis_cb_act(false) {}
+  FrameLoader() : m_current_stream(std::make_shared<std::ifstream>()), m_frame_nr(0) {}
   
-  void setHwMaxImageSizeCallback(HwMaxImageSizeCallback &cbk) override
-  {
-    DEB_MEMBER_FUNCT();
-    registerMaxImageSizeCallback(cbk);
-  } 
-
   Camera::Mode getMode() const { return Camera::MODE_LOADER; }
 
   void setFilePattern(const std::string &file_pattern);
@@ -75,13 +69,6 @@ public:
 
   void getMaxImageSize(Size &max_image_size) const { max_image_size = m_frame_dim.getSize(); }
 
-protected:
-  void setMaxImageSizeCallbackActive(bool cb_active) override
-  {
-    DEB_MEMBER_FUNCT();
-    m_mis_cb_act = cb_active;
-  }
-
 private:
   typedef std::vector<std::string> files_t;
     
@@ -93,8 +80,6 @@ private:
 
   unsigned long m_frame_nr;
   FrameDim m_frame_dim;
-
-  bool m_mis_cb_act; //<! Used by setMaxImageSizeCallbackActive
 };
 
 } // namespace Simulator

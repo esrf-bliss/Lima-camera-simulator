@@ -230,11 +230,8 @@ void FrameLoader::setFilePattern(const std::string &file_pattern)
 
     DEB_TRACE() << DEB_VAR1(m_frame_dim);
 
-    if (m_mis_cb_act)
-      // Signal LiMA core that the frame properties may have changed
-      maxImageSizeChanged(size, image_type);
-    else
-      DEB_WARNING() << "Image size callback is not active";
+    // Signal LiMA core that the frame properties may have changed
+    maxImageSizeChanged(size, image_type);
   } else
     throw LIMA_EXC(CameraPlugin, Error, "No file found with the given pattern");
 }
