@@ -86,7 +86,8 @@ public:
       // Allocate the buffers for the prebuilt frames
       m_mem_size = frame_dim.getMemSize();
       for (buffer_t& frame_buffer : m_prefetched_frame_buffers) {
-        frame_buffer = std::make_unique<unsigned char[]>(m_mem_size);
+        //In C++14, use std::make_unique<unsigned char[]>(m_mem_size);
+        frame_buffer = std::unique_ptr<unsigned char[]>(new unsigned char[m_mem_size]);
 
         if (!frame_buffer) {
           std::ostringstream msg;
