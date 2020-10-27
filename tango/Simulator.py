@@ -123,8 +123,6 @@ class Simulator(PyTango.Device_4Impl):
 
     def __getattr__(self,name) :
         try:
-            print(name)
-            print(type(_SimuCamera.getFrameGetter()))
             return AttrHelper.get_attr_4u(self, name, _SimuCamera.getFrameGetter(), False)
         except:
             return AttrHelper.get_attr_4u(self, name, _SimuCamera)
