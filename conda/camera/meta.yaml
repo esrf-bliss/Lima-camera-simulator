@@ -13,14 +13,14 @@ build:
 requirements:
   host:
     - python {{ python }}
-    - sip 4.19.8              # For compatibility with pyqt 5.9.2
+    - sip
     - lima-core
   build:
     - cmake
     - {{ compiler('cxx') }}
   run:
     - python
-    - sip >=4.19.4, <=4.19.8  # For compatibility with pyqt 5.9.2
+    - {{ pin_compatible('sip', max_pin='x.x.x') }}
     - {{ pin_compatible('lima-core', max_pin='x.x') }}
 
 test:

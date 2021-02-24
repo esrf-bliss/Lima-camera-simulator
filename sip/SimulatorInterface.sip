@@ -47,6 +47,9 @@ class DetInfoCtrlObj : HwDetInfoCtrlObj
 					HwMaxImageSizeCallback& cb);
 	virtual void unregisterMaxImageSizeCallback(
 					HwMaxImageSizeCallback& cb);
+
+ private:
+	DetInfoCtrlObj(const DetInfoCtrlObj&);
 };
 
 class SyncCtrlObj : HwSyncCtrlObj
@@ -72,9 +75,10 @@ class SyncCtrlObj : HwSyncCtrlObj
 	virtual void setNbHwFrames(int  nb_frames);
 	virtual void getNbHwFrames(int& nb_frames /Out/);
 
-	virtual void getValidRanges(HwSyncCtrlObj::ValidRangesType&
-	                                                   valid_ranges /Out/);
+	virtual void getValidRanges(HwSyncCtrlObj::ValidRangesType& valid_ranges /Out/);
 
+ private:
+	SyncCtrlObj(const SyncCtrlObj&);
 };
 
 
@@ -92,6 +96,8 @@ class BinCtrlObj : HwBinCtrlObj
 	virtual void getBin(Bin& bin /Out/);
 	virtual void checkBin(Bin& bin /In,Out/);
 
+ private:
+	BinCtrlObj(const BinCtrlObj&);
 };
 
 
@@ -115,6 +121,8 @@ class Interface : HwInterface
 	virtual void getStatus(HwInterface::StatusType& status /Out/);
 	virtual int getNbHwAcquiredFrames();
 
+ private:
+	Interface(const Interface&);
 };
 
 };
