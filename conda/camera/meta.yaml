@@ -13,14 +13,14 @@ build:
 requirements:
   host:
     - python {{ python }}
-    - sip
+    - sip 4.19* # API v12.7
     - lima-core
   build:
     - cmake
     - {{ compiler('cxx') }}
   run:
     - python
-    - {{ pin_compatible('sip', max_pin='x.x.x') }}
+    - {{ pin_compatible('sip', min_pin='x.x.x', max_pin='x') }}
     - {{ pin_compatible('lima-core', max_pin='x.x') }}
 
 test:
