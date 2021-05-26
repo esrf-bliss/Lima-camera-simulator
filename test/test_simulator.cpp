@@ -19,90 +19,126 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
-#include "SimulatorInterface.h"
-#include "lima/CtControl.h"
-#include "lima/CtAcquisition.h"
-#include "lima/CtSaving.h"
-#include "lima/CtImage.h"
 
-#include <iostream>
-#include <unistd.h>
+#include "simulator/SimulatorInterface.h"
+#include "simulator/SimulatorFrameGetter.h"
+#include "simulator/SimulatorFrameLoader.h"
+#include "simulator/SimulatorFrameBuilder.h"
+#include "simulator/SimulatorFramePrefetcher.h"
+#include "lima/CtTestApp.h"
+
+DEB_GLOBAL(DebModTest);
 
 using namespace lima;
 using namespace lima::Simulator;
-using namespace std;
 
-void simulator_test(double expo, long nframe)
+auto MODE_GENERATOR = Camera::MODE_GENERATOR;
+auto MODE_GENERATOR_PREFETCH = Camera::MODE_GENERATOR_PREFETCH;
+auto MODE_LOADER = Camera::MODE_LOADER;
+auto MODE_LOADER_PREFETCH = Camera::MODE_LOADER_PREFETCH;
+
+class TestApp : public CtTestApp
 {
-	Camera simu;
-	AutoPtr<HwInterface> hw;
-	AutoPtr<CtControl> ct;
-	CtAcquisition *acq;
-	CtSaving *save;
-	CtImage *image;
-	CtControl::ImageStatus img_status;
-	long frame= -1;
+	DEB_CLASS_NAMESPC(DebModTest, "TestApp", "Simulator");
 
-	hw= new Interface(simu);
-	ct= new CtControl(hw);
+ public:
+	class Pars : public CtTestApp::Pars
+	{
+		DEB_CLASS_NAMESPC(DebModTest, "TestApp::Pars", "Simulator");
+	public:
+		Camera::Mode cam_mode{MODE_GENERATOR};
+		int cam_nb_prefetched_frames{10};
+		std::string cam_file_pattern{"./data/test_*.edf"};
+		FrameDim cam_frame_dim;
+		Pars();
+	};
 
-	save= ct->saving();
-	save->setDirectory("./data");
- 	save->setPrefix("test_");
-	save->setSuffix(".edf");
-	save->setNextNumber(100);
-	save->setFormat(CtSaving::EDF);
-	save->setSavingMode(CtSaving::AutoFrame);
-	save->setOverwritePolicy(CtSaving::Overwrite);
-	save->setFramesPerFile(100);
+	TestApp(int argc, char *argv[]) : CtTestApp(argc, argv) {}
 
-	Bin bin(2,2);
-	image= ct->image();
-	image->setBin(bin);
+ protected:
+	virtual CtTestApp::Pars *getPars();
+	virtual CtControl *getCtControl();
+	virtual index_map getIndexMap() { return {}; }
+	virtual void configureAcq(const index_map& indexes);
 
-	cout << "SIMUTEST: " << expo <<" sec / " << nframe << " frames" << endl;
+	AutoPtr<Pars> m_pars;
+	AutoPtr<Camera> m_cam;
+	AutoPtr<HwInterface> m_interface;
+	AutoPtr<CtControl> m_ct;
+};
 
-	acq= ct->acquisition();
-	acq->setAcqMode(Single);
-	acq->setAcqExpoTime(expo);
-	acq->setAcqNbFrames(nframe);
+TestApp::Pars::Pars()
+{
+	DEB_CONSTRUCTOR();
 
-	ct->prepareAcq();
-   	ct->startAcq();
-	cout << "SIMUTEST: acq started" << endl;
+#define AddOpt(var, opt, par)				\
+	m_opt_list.insert(MakeOpt(var, "", opt, par))
 
-	while (frame < (nframe-1)) {
-	    usleep(100000);
-	    ct->getImageStatus(img_status);
-	    if (frame!=img_status.LastImageAcquired) {
-		frame= img_status.LastImageAcquired;
-	    	cout << "SIMUTEST: frame nr " << frame << endl;
-	    }
-	}
-	cout << "SIMUTEST: acq finished" << endl;
-	
-	ct->stopAcq();
-	cout << "SIMUTEST: acq stopped" << endl;
+	AddOpt(cam_mode, "--cam-mode", "camera mode");
+
+	AddOpt(cam_nb_prefetched_frames, "--cam-nb-prefetched-frames",
+	       "nb prefetched frames");
+
+	AddOpt(cam_file_pattern, "--cam-file-pattern", "image file pattern");
+
+	AddOpt(cam_frame_dim, "--cam-frame-dim", "generated frame dim");
 }
+
+CtTestApp::Pars *TestApp::getPars()
+{
+	m_pars = new Pars();
+	return m_pars;
+}
+
+CtControl *TestApp::getCtControl()
+{
+	DEB_MEMBER_FUNCT();
+
+	m_cam = new Camera();
+
+	DEB_ALWAYS() << "Camera: " << DEB_VAR1(m_pars->cam_mode);
+	m_cam->setMode(m_pars->cam_mode);
+	if ((m_pars->cam_mode == MODE_GENERATOR_PREFETCH) ||
+	    (m_pars->cam_mode == MODE_LOADER_PREFETCH)) {
+		DEB_ALWAYS() << DEB_VAR1(m_pars->cam_nb_prefetched_frames);
+		FramePrefetcher<FrameBuilder> *fbp= m_cam->getFrameBuilderPrefetched();
+		fbp->setNbPrefetchedFrames(m_pars->cam_nb_prefetched_frames);
+	}
+	if ((m_pars->cam_mode == MODE_LOADER) ||
+	    (m_pars->cam_mode == MODE_LOADER_PREFETCH)) {
+		DEB_ALWAYS() << DEB_VAR1(m_pars->cam_file_pattern);
+		FrameLoader *fl= m_cam->getFrameLoader();
+		fl->setFilePattern(m_pars->cam_file_pattern);
+	}
+
+	if (m_pars->cam_frame_dim.isValid())
+		m_cam->setFrameDim(m_pars->cam_frame_dim);
+
+	m_interface = new Interface(*m_cam);
+	m_ct = new CtControl(m_interface);
+	return m_ct;
+}
+
+void TestApp::configureAcq(const index_map& indexes)
+{
+	DEB_MEMBER_FUNCT();
+
+	FrameDim effective_dim;
+	FrameGetter *fg = m_cam->getFrameGetter();
+	fg->getEffectiveFrameDim(effective_dim);
+	DEB_ALWAYS() << DEB_VAR1(effective_dim);
+}
+
 
 int main(int argc, char *argv[])
 {
-	double expo;
-	long nframe;
-
-	if (argc != 3) {
-		expo= 0.5;
-		nframe= 5;
-	} else {
-		expo= atof(argv[1]);
-		nframe= atoi(argv[2]);
-	}
+	DEB_GLOBAL_FUNCT();
         try {
-                simulator_test(expo, nframe);
-        } catch (Exception e) {
-	        cerr << "LIMA Exception:" << e.getErrMsg() << endl;
+		TestApp app(argc, argv);
+		app.run();
+        } catch (Exception& e) {
+	        DEB_ERROR() << "LIMA Exception:" << e.getErrMsg();
         }
-
-        return 0;
+	return 0;
 }
 

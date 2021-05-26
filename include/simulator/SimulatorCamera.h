@@ -178,6 +178,9 @@ private:
 
 SIMULATOR_EXPORT std::ostream &operator<<(std::ostream &os, Camera &simu);
 
+SIMULATOR_EXPORT std::ostream &operator<<(std::ostream &os, Camera::Mode mode);
+SIMULATOR_EXPORT std::istream &operator>>(std::istream &is, Camera::Mode &mode);
+
 } // namespace Simulator
 
 } // namespace lima

@@ -539,3 +539,43 @@ std::ostream &lima::Simulator::operator<<(std::ostream &os, Camera &simu)
   os << "<status=" << status << ">";
   return os;
 }
+
+std::ostream &lima::Simulator::operator<<(std::ostream &os, Camera::Mode mode)
+{
+  std::string s;
+  switch (mode) {
+  case Camera::MODE_GENERATOR:
+    s = "GENERATOR";
+    break;
+  case Camera::MODE_GENERATOR_PREFETCH:
+    s = "GENERATOR_PREFETCH";
+    break;
+  case Camera::MODE_LOADER:
+    s = "LOADER";
+    break;
+  case Camera::MODE_LOADER_PREFETCH:
+    s = "LOADER_PREFETCH";
+    break;
+  default:
+    s = "Unknown";
+  }
+  os << s;
+  return os;
+}
+
+std::istream &lima::Simulator::operator>>(std::istream &is, Camera::Mode &mode)
+{
+  std::string s;
+  is >> s;
+  if (s == "GENERATOR")
+    mode = Camera::MODE_GENERATOR;
+  else if (s == "GENERATOR_PREFETCH")
+    mode = Camera::MODE_GENERATOR_PREFETCH;
+  else if (s == "LOADER")
+    mode = Camera::MODE_LOADER;
+  else if (s == "LOADER_PREFETCH")
+    mode = Camera::MODE_LOADER_PREFETCH;
+  else
+    throw LIMA_HW_EXC(InvalidValue, "Invalid Camera::Mode: ") << s;
+  return is;
+}
