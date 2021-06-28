@@ -146,7 +146,7 @@ class Simulator(PyTango.Device_4Impl):
     def trigExternal(self):
         _SimuCamera.extTrigAcq()
 
-    def __getattr__(self,name) :
+    def __getattr__(self, name):
         try:
             return AttrHelper.get_attr_4u(self, name, _SimuCamera.getFrameGetter(), False)
         except:
