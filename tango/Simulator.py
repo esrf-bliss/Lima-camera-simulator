@@ -110,15 +110,15 @@ class Simulator(PyTango.Device_4Impl):
         self.get_device_properties(self.get_device_class())
 
         # Apply properties if any
-        if self.frame_dim:
-            frame_dim = self.getFrameDimFromLongArray(self.frame_dim)
-            _SimuCamera.setFrameDim(frame_dim)
-
         if self.mode and (Simulator._Mode.get(self.mode) != None):
             _SimuCamera.setMode(Simulator._Mode[self.mode])
 
         if 'PREFETCH' in self.mode and self.nb_prefetched_frames:
             _SimuCamera.getFrameGetter().setNbPrefetchedFrames(self.nb_prefetched_frames)
+
+        if self.frame_dim:
+            frame_dim = self.getFrameDimFromLongArray(self.frame_dim)
+            _SimuCamera.setFrameDim(frame_dim)
 
         self.set_state(PyTango.DevState.ON)
 
