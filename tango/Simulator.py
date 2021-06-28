@@ -105,7 +105,6 @@ class Simulator(PyTango.Device_4Impl):
 #------------------------------------------------------------------
     @Core.DEB_MEMBER_FUNCT
     def init_device(self):
-        self.set_state(PyTango.DevState.ON)
 
         # Load the properties
         self.get_device_properties(self.get_device_class())
@@ -120,6 +119,8 @@ class Simulator(PyTango.Device_4Impl):
 
         if 'PREFETCH' in self.mode and self.nb_prefetched_frames:
             _SimuCamera.getFrameGetter().setNbPrefetchedFrames(self.nb_prefetched_frames)
+
+        self.set_state(PyTango.DevState.ON)
 
     @Core.DEB_MEMBER_FUNCT
     def getFrameDimFromLongArray(self, dim_arr):
