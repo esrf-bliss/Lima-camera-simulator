@@ -135,3 +135,22 @@ def test_detector_size():
 
     detinfo = hw.getHwCtrlObj(Core.HwCap.DetInfo)
     assert detinfo.getMaxImageSize() == Core.Size(100, 100)
+
+
+def test_update_mode():
+    """Change the simulator mode of the detector
+
+    Check that the size have not changed
+    """
+    cam = Simulator.Camera()
+    hw = Simulator.Interface(cam)
+    ct = Core.CtControl(hw)
+    cam.setFrameDim(Core.FrameDim(100, 100, Core.Bpp32))
+    dim = ct.image().getImageDim()
+    assert dim.getSize() == Core.Size(100, 100)
+
+    new_mode = Simulator.Camera.MODE_GENERATOR_PREFETCH
+    cam.setMode(new_mode)
+
+    dim = ct.image().getImageDim()
+    assert dim.getSize() == Core.Size(100, 100)
