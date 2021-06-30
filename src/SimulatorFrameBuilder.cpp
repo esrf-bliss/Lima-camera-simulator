@@ -193,6 +193,9 @@ void FrameBuilder::setFrameDim(const FrameDim &dim)
 
   m_frame_dim = dim;
 
+  // Store this size as the hardware size
+  max_hw_size = dim.getSize();
+
   // Signal LiMA core that the frame properties may have changed
   maxImageSizeChanged(m_frame_dim.getSize(), m_frame_dim.getImageType());
 
