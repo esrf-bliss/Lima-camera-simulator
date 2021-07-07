@@ -76,6 +76,7 @@ public:
   void prepareAcq();
   void startAcq();
   void stopAcq();
+  void extTrigAcq();
 
   void setMode(const Mode &mode);
   void getMode(Mode &mode) const { mode = m_mode; }
@@ -124,6 +125,7 @@ private:
       StartAcq,
       StopAcq,
       Reset,
+      ExtTrigAcq,
     };
 
     SimuThread(Camera &simu);
@@ -140,6 +142,7 @@ private:
   private:
     void execPrepareAcq();
     void execStartAcq();
+    void execExternalTrigAcq();
     Camera *m_simu;
   };
   friend class SimuThread;

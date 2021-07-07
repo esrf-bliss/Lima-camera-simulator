@@ -72,6 +72,9 @@ void Camera::SimuThread::execCmd(int cmd)
   case StartAcq:
     execStartAcq();
     break;
+  case ExtTrigAcq:
+	execExternalTrigAcq();
+    break;
   case StopAcq:
   case Reset:
     setStatus(Ready);
@@ -109,7 +112,7 @@ void Camera::SimuThread::execStartAcq()
     FrameGetter *frame_getter = m_simu->m_frame_getter;
     frame_getter->resetFrameNr(m_acq_frame_nb);
 
-    int nb_frames = m_simu->m_trig_mode == IntTrig ? m_simu->m_nb_frames : m_acq_frame_nb + 1;
+    int nb_frames = (m_simu->m_trig_mode == IntTrig || m_simu->m_trig_mode == ExtTrigSingle) ? m_simu->m_nb_frames : m_acq_frame_nb + 1;
     int &frame_nb = m_acq_frame_nb;
     for (; (nb_frames == 0) || (frame_nb < nb_frames); frame_nb++) {
       if (getNextCmd() == StopAcq) {
@@ -153,6 +156,19 @@ void Camera::SimuThread::execStartAcq()
     setStatus(Fault);
   }
 }
+
+void Camera::SimuThread::execExternalTrigAcq()
+{
+  DEB_MEMBER_FUNCT();
+
+  if (m_simu->m_trig_mode != ExtTrigSingle && m_simu->m_trig_mode != ExtTrigMult) {
+    DEB_ERROR() << "Fake external trigger was invoked but the trig_mode is not configured as ExtTrig";
+    return;
+  }
+
+  execStartAcq();
+}
+
 
 Camera::Camera(const Mode &mode) : m_mode(mode), m_frame_getter(NULL), m_cbk(NULL), m_thread(*this)
 {
@@ -385,6 +401,22 @@ void Camera::startAcq()
   m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
 
   m_thread.sendCmd(SimuThread::StartAcq);
+  if (m_thread.waitNotStatus(thread_status) == SimuThread::Fault)
+    THROW_HW_ERROR(Error) << "StartAcq failed";
+}
+
+void Camera::extTrigAcq()
+{
+  DEB_MEMBER_FUNCT();
+
+  int thread_status = m_thread.getStatus();
+  if ((thread_status != SimuThread::Prepare) &&
+      (thread_status != SimuThread::Ready))
+    THROW_HW_ERROR(Error) << "Camera not Prepared nor Ready (Multi Trigger)";
+
+  m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
+
+  m_thread.sendCmd(SimuThread::ExtTrigAcq);
   if (m_thread.waitNotStatus(thread_status) == SimuThread::Fault)
     THROW_HW_ERROR(Error) << "StartAcq failed";
 }

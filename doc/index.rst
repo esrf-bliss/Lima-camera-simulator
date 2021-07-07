@@ -1,7 +1,7 @@
 .. _camera-simulator:
 
 Simulator
-----------
+---------
 
 .. image:: simulator.jpg
 
@@ -23,7 +23,7 @@ Prerequisite
 There is no special prerequisite, the simulator can be compiled and tested on both Linux and Windows platforms.
 
 Installation & Module configuration
-````````````````````````````````````
+```````````````````````````````````
 
 Follow the generic instructions in :ref:`build_installation`. If using CMake directly, add the following flag:
 
@@ -87,7 +87,7 @@ Standard capabilities
 This plugin has been implemented in respect of the standard capabilites of a camera plugin but with some limitations according to some programmer's choices. We only provide here extra information for a better understanding of the capabilities for the simulator camera.
 
  - :cpp:class:`HwDetInfo`: The default (and max.) frame size if about 1024x1024-Bpp32, but one can only change the image type by calling :cpp:func:`DetInfoCtrlObj::setCurrImageType()`.
- - :cpp:class:`HwSync`: Only IntTrig trigger mode is supported. For both exposure time and latency time min. is 10e-9 and max. is 10e6.
+ - :cpp:class:`HwSync`: `IntTrig` and `IntTrigMult` triggers mode are supported. For both exposure time and latency time min. is 10e-9 and max. is 10e6. `ExtTrigSingle` and `ExtTrigMult` are also supported. The camera and the Tango simulator provides an API to manually trig it.
 
 Optional capabilities
 .....................
@@ -104,7 +104,7 @@ Configuration
 No hardware configuration of course!
 
 How to use
-````````````
+``````````
 
 The LimaCCDs tango server provides a complete interface to the simulator plugin so feel free to test.
 

@@ -1,2 +1,4 @@
 build/
 tango/build/
+/.pytest_cache/
+/test/__pycache__/

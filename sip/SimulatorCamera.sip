@@ -72,6 +72,7 @@ public:
 
 	void startAcq();
 	void stopAcq();
+	void extTrigAcq();
 
 	void setNbFrames(int  nb_frames);
 	void getNbFrames(int& nb_frames /Out/);

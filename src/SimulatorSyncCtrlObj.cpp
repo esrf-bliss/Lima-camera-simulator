@@ -1,7 +1,7 @@
 //###########################################################################
 // This file is part of LImA, a Library for Image Acquisition
 //
-// Copyright (C) : 2009-2011
+// Copyright (C) : 2009-2021
 // European Synchrotron Radiation Facility
 // BP 220, Grenoble 38043
 // FRANCE
@@ -35,6 +35,8 @@ bool SyncCtrlObj::checkTrigMode(TrigMode trig_mode)
   switch (trig_mode) {
   case IntTrig:
   case IntTrigMult:
+  case ExtTrigSingle:
+  case ExtTrigMult:
     return true;
   default:
     return false;

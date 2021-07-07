@@ -143,6 +143,9 @@ class Simulator(PyTango.Device_4Impl):
     def getAttrStringValueList(self, attr_name):
         return AttrHelper.get_attr_string_value_list(self, attr_name)
 
+    def trigExternal(self):
+        _SimuCamera.extTrigAcq()
+
     def __getattr__(self,name) :
         try:
             return AttrHelper.get_attr_4u(self, name, _SimuCamera.getFrameGetter(), False)
@@ -240,6 +243,7 @@ class SimulatorClass(PyTango.DeviceClass):
         'getAttrStringValueList':
         [[PyTango.DevString, "Attribute name"],
          [PyTango.DevVarStringArray, "Authorized String value list"]],
+        "trigExternal": [[PyTango.DevVoid, ""], [PyTango.DevVoid, ""]],
     }
 
     attr_list = {
