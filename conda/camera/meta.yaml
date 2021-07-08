@@ -24,8 +24,14 @@ requirements:
     - {{ pin_compatible('lima-core', max_pin='x.x') }}
 
 test:
+  source_files:
+    - test
+  requires:
+    - pytest
   imports:
     - Lima.Simulator
+  commands:
+    - pytest test/test.py
 
 about:
   home: https://github.com/esrf-bliss/Lima
