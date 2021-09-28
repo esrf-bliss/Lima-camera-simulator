@@ -74,14 +74,17 @@ TestApp::Pars::Pars()
 #define AddOpt(var, opt, par)				\
 	m_opt_list.insert(MakeOpt(var, "", opt, par))
 
-	AddOpt(cam_mode, "--cam-mode", "camera mode");
+	AddOpt(cam_mode, "--cam-mode",
+	       "mode: MODE_[GENERATOR|LOADER][_PREFETCH]");
+
+	AddOpt(cam_frame_dim, "--cam-frame-dim",
+	       "generator frame dim: WxHxD-T, D=1|2|4, T=Bpp8|16|32");
+
+	AddOpt(cam_file_pattern, "--cam-file-pattern",
+	       "loader image file pattern");
 
 	AddOpt(cam_nb_prefetched_frames, "--cam-nb-prefetched-frames",
-	       "nb prefetched frames");
-
-	AddOpt(cam_file_pattern, "--cam-file-pattern", "image file pattern");
-
-	AddOpt(cam_frame_dim, "--cam-frame-dim", "generated frame dim");
+	       "number of prefetched frames");
 }
 
 CtTestApp::Pars *TestApp::getPars()
