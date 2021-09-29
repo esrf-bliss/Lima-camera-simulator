@@ -89,11 +89,11 @@ FrameBuilder::FrameBuilder(FrameDim &frame_dim, Bin &bin, Roi &roi, const PeakLi
 void FrameBuilder::init(FrameDim &frame_dim, Bin &bin, Roi &roi, const PeakList &peaks, double grow_factor)
 {
   checkValid(frame_dim, bin, roi);
-  setPeaks(peaks);
-
   m_frame_dim = frame_dim;
   m_bin       = bin;
   m_roi       = roi;
+
+  setPeaks(peaks);
 
   m_fill_type = Gauss;
   m_rot_axis  = RotationY;
@@ -125,16 +125,15 @@ FrameBuilder::~FrameBuilder() {}
  *******************************************************************/
 void FrameBuilder::checkValid(const FrameDim &frame_dim, const Bin &bin, const Roi &roi)
 {
-  Size max_size;
-  getMaxImageSize(max_size);
+  Size size = frame_dim.getSize();
+  if (size.isEmpty())
+    throw LIMA_HW_EXC(InvalidValue, "Invalid empty frame size");
+  if ((size.getWidth() % 2 != 0) || (size.getHeight() % 2 != 0))
+    throw LIMA_HW_EXC(InvalidValue, "Frame size must be multiple of 2x2");
 
   Bin valid_bin = bin;
   checkBin(valid_bin);
   if (valid_bin != bin) throw LIMA_HW_EXC(InvalidValue, "Invalid bin");
-
-  if ((frame_dim.getSize().getWidth() > max_size.getWidth()) ||
-      (frame_dim.getSize().getHeight() > max_size.getHeight()))
-    throw LIMA_HW_EXC(InvalidValue, "Frame size too big");
 
   FrameDim bin_dim = frame_dim / bin;
 
@@ -189,12 +188,23 @@ void FrameBuilder::getEffectiveFrameDim(FrameDim &dim) const
  *******************************************************************/
 void FrameBuilder::setFrameDim(const FrameDim &dim)
 {
-  checkValid(dim, m_bin, m_roi);
+  Roi roi = m_roi;
+  if (dim != m_frame_dim)
+    roi.reset();
+  checkValid(dim, m_bin, roi);
+
+  Size prev_size = m_frame_dim.getSize();
+  Size new_size = dim.getSize();
 
   m_frame_dim = dim;
+  m_roi = roi;
 
-  // Store this size as the hardware size
-  max_hw_size = dim.getSize();
+  // Keep aspect-ratio of peaks' positions
+  vector<GaussPeak>::iterator p;
+  for (p = m_peaks.begin(); p != m_peaks.end(); ++p) {
+    p->x0 *= double(new_size.getWidth()) / prev_size.getWidth();
+    p->y0 *= double(new_size.getHeight()) / prev_size.getHeight();
+  }
 
   // Signal LiMA core that the frame properties may have changed
   maxImageSizeChanged(m_frame_dim.getSize(), m_frame_dim.getImageType());
@@ -255,8 +265,8 @@ void FrameBuilder::getRoi(Roi &roi) const
 void FrameBuilder::setRoi(const Roi &roi)
 {
   checkValid(m_frame_dim, m_bin, roi);
-
   m_roi = roi;
+  checkRoi(m_roi);
 }
 
 /**
@@ -268,6 +278,17 @@ void FrameBuilder::setRoi(const Roi &roi)
 void FrameBuilder::checkRoi(Roi &roi) const
 {
   roi.alignCornersTo(8, Ceil);
+
+  Size full_frame = m_frame_dim.getSize() / m_bin;
+  Roi full_roi = Roi(0, full_frame);
+  if (full_roi.containsRoi(roi))
+    return;
+
+  Point br = roi.getBottomRight();
+  Point max_br = full_roi.getBottomRight();
+  br.x = min(br.x, max_br.x);
+  br.y = min(br.y, max_br.y);
+  roi.setSize(br + 1 - roi.getTopLeft());
 }
 
 /**

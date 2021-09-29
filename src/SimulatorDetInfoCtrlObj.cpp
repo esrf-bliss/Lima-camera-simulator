@@ -34,7 +34,7 @@ void DetInfoCtrlObj::getMaxImageSize(Size &max_image_size)
 
 void DetInfoCtrlObj::getDetectorImageSize(Size &det_image_size)
 {
-  m_simu.getMaxImageSize(det_image_size);
+  m_simu.getEffectiveImageSize(det_image_size);
 }
 
 void DetInfoCtrlObj::getDefImageType(ImageType &def_image_type)

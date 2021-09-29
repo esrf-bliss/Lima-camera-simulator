@@ -56,8 +56,6 @@ class SIMULATOR_EXPORT FrameBuilder : public FrameGetter {
 public:
   static const bool is_thread_safe = true;
 
-  Size max_hw_size = Size(1024, 1024);
-
   enum FillType {
     Gauss,
     Diffraction,
@@ -120,7 +118,8 @@ public:
   void prepareAcq() {}
 
   /// Gets the maximum "hardware" image size
-  void getMaxImageSize(Size &max_size) const { max_size = max_hw_size; }
+  void getMaxImageSize(Size &max_size) const
+  { max_size = m_frame_dim.getSize(); }
 
 private:
   FrameDim m_frame_dim; //<! Generated frame dimensions

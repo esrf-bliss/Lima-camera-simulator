@@ -89,7 +89,8 @@ public:
 	HwInterface::StatusType::Basic getStatus();
 	int getNbAcquiredFrames();
 
-	void getMaxImageSize(Size& max_image_size /Out/);
+	void getMaxImageSize(Size& max_image_size /Out/) const;
+	void getEffectiveImageSize(Size& effect_image_size /Out/) const;
 
 	void reset();
 

@@ -265,6 +265,13 @@ void Camera::getMaxImageSize(Size &max_image_size) const
   m_frame_getter->getMaxImageSize(max_image_size);
 }
 
+void Camera::getEffectiveImageSize(Size &effect_image_size) const
+{
+  FrameDim fdim;
+  m_frame_getter->getEffectiveFrameDim(fdim);
+  effect_image_size = fdim.getSize();
+}
+
 FrameBuilder *Camera::getFrameBuilder()
 {
   return dynamic_cast<FrameBuilder *>(m_frame_getter);
