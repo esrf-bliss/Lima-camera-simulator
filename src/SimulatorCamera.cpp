@@ -132,7 +132,7 @@ void Camera::SimuThread::execStartAcq()
       DEB_TRACE() << DEB_VAR1(frame_dim);
 
       // Get the next frame
-      bool res = frame_getter->getNextFrame(frame_nb, ptr);
+      bool res = frame_getter->getFrame(frame_nb, ptr);
       if (!res)
         throw LIMA_HW_EXC(InvalidValue, "Failed to get next frame");
 

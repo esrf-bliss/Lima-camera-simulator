@@ -116,7 +116,7 @@ public:
   void getDiffractionSpeed(double &sx, double &sy) const;
   void setDiffractionSpeed(const double &sx, const double &sy);
 
-  bool getNextFrame(unsigned long frame_nr, unsigned char *ptr) override;
+  bool getFrame(unsigned long frame_nr, unsigned char *ptr) override;
   void prepareAcq() {}
 
   /// Gets the maximum "hardware" image size

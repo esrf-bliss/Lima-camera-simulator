@@ -53,7 +53,7 @@ public:
   void setFilePattern(const std::string &file_pattern);
   void getFilePattern(std::string &file_pattern) const { file_pattern = m_file_pattern; }
 
-  bool getNextFrame(unsigned long frame_nr, unsigned char *ptr) override;
+  bool getFrame(unsigned long frame_nr, unsigned char *ptr) override;
   void prepareAcq();
 
   void setFrameDim(const FrameDim &frame_dim)

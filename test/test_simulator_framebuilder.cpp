@@ -71,7 +71,7 @@ int main( void )
 
 	for( int i=0; i<10; i++ ) {
 		int frame_nb = fb.getFrameNr();
-		fb.getNextFrame( buffer );
+		fb.getFrame( buffer );
 
 		Timestamp t = Timestamp::now() - start;
 		int pixels = Point(fd.getSize()).getArea();

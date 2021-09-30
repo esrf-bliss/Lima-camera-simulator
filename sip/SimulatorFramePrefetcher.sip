@@ -41,7 +41,7 @@ public:
     void setNbPrefetchedFrames(unsigned int nb_prefetched_frames);
 
     void prepareAcq();
-    bool getNextFrame(unsigned long frame_nr, unsigned char *ptr);
+    bool getFrame(unsigned long frame_nr, unsigned char *ptr);
 
     void setFrameDim(const FrameDim& frame_dim);
     void getFrameDim(FrameDim& frame_dim) const;
@@ -76,7 +76,7 @@ public:
     void setNbPrefetchedFrames(unsigned int nb_prefetched_frames);
 
     void prepareAcq();
-    bool getNextFrame(unsigned long frame_nr, unsigned char *ptr);
+    bool getFrame(unsigned long frame_nr, unsigned char *ptr);
 
     void setFrameDim(const FrameDim& frame_dim);
     void getFrameDim(FrameDim& frame_dim) const;

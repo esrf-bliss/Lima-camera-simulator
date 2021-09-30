@@ -615,7 +615,7 @@ void FrameBuilder::fillData(unsigned long frame_nr, unsigned char *ptr) const
  * @exception lima::Exception  The image depth is not
  *1,2 or 4
  *******************************************************************/
-bool FrameBuilder::getNextFrame(unsigned long frame_nr, unsigned char *ptr)
+bool FrameBuilder::getFrame(unsigned long frame_nr, unsigned char *ptr)
 {
   switch (m_frame_dim.getDepth()) {
   case 1:

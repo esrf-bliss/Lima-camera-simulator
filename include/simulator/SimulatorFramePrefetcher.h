@@ -100,15 +100,15 @@ public:
 // Parallel for loop
 #pragma omp parallel for
         for (int i = 0; i < m_prefetched_frame_buffers.size(); i++)
-          FrameGetterImpl::getNextFrame(i, m_prefetched_frame_buffers[i].get());
+          FrameGetterImpl::getFrame(i, m_prefetched_frame_buffers[i].get());
       } else
         // Serial for loop
         for (size_t i = 0; i < m_prefetched_frame_buffers.size(); i++)
-          FrameGetterImpl::getNextFrame(i, m_prefetched_frame_buffers[i].get());
+          FrameGetterImpl::getFrame(i, m_prefetched_frame_buffers[i].get());
     }
   }
 
-  bool getNextFrame(unsigned long frame_nr, unsigned char *ptr) override
+  bool getFrame(unsigned long frame_nr, unsigned char *ptr) override
   {
     DEB_MEMBER_FUNCT();
 
