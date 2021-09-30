@@ -46,18 +46,15 @@ class SIMULATOR_EXPORT FrameLoader : public FrameGetter {
 public:
   static const bool is_thread_safe = false;
 
-  FrameLoader() : m_current_stream(std::make_shared<std::ifstream>()), m_frame_nr(0) {}
+  FrameLoader() : m_current_stream(std::make_shared<std::ifstream>()) {}
   
   Camera::Mode getMode() const { return Camera::MODE_LOADER; }
 
   void setFilePattern(const std::string &file_pattern);
   void getFilePattern(std::string &file_pattern) const { file_pattern = m_file_pattern; }
 
-  bool getNextFrame(unsigned char *ptr);
+  bool getNextFrame(unsigned long frame_nr, unsigned char *ptr) override;
   void prepareAcq();
-
-  unsigned long getFrameNr() const { return m_frame_nr; }
-  void resetFrameNr(unsigned long frame_nr = 0) { m_frame_nr = frame_nr; }
 
   void setFrameDim(const FrameDim &frame_dim)
   {
@@ -78,7 +75,6 @@ private:
 
   std::shared_ptr<std::ifstream> m_current_stream; //<! The current stream
 
-  unsigned long m_frame_nr;
   FrameDim m_frame_dim;
 };
 

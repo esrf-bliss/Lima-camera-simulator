@@ -116,11 +116,8 @@ public:
   void getDiffractionSpeed(double &sx, double &sy) const;
   void setDiffractionSpeed(const double &sx, const double &sy);
 
-  bool getNextFrame(unsigned char *ptr);
+  bool getNextFrame(unsigned long frame_nr, unsigned char *ptr) override;
   void prepareAcq() {}
-
-  unsigned long getFrameNr() const;
-  void resetFrameNr(unsigned long frame_nr = 0);
 
   /// Gets the maximum "hardware" image size
   void getMaxImageSize(Size &max_size) const { max_size = Size(max_dim, max_dim); }
@@ -142,18 +139,16 @@ private:
   double m_diffract_sx;
   double m_diffract_sy;
 
-  unsigned long m_frame_nr;
-
   void init(FrameDim &frame_dim, Bin &bin, Roi &roi, const PeakList &peaks, double grow_factor);
 
   void checkValid(const FrameDim &frame_dim, const Bin &bin, const Roi &roi);
   void checkPeaks(PeakList const &peaks);
-  double dataXY(const PeakList &peaks, int x, int y) const;
+  double dataXY(unsigned long frame_nr, const PeakList &peaks, int x, int y) const;
   double dataDiffract(double x, double y) const;
   template <class depth>
-  void fillData(unsigned char *ptr);
+  void fillData(unsigned long frame_nr, unsigned char *ptr) const;
 
-  PeakList getGaussPeaksFrom3d(double angle);
+  PeakList getGaussPeaksFrom3d(double angle) const;
   static double gauss2D(double x, double y, double x0, double y0, double fwhm, double max);
 };
 

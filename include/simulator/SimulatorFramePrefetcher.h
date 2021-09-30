@@ -52,7 +52,7 @@ class FramePrefetcher : public FrameGetterImpl {
   typedef std::unique_ptr<unsigned char[]> buffer_t;
 
 public:
-  FramePrefetcher() : m_frame_nr(0) {}
+  FramePrefetcher() {}
 
   FramePrefetcher(const FramePrefetcher &) = delete;
   FramePrefetcher & operator=(const FramePrefetcher &) = delete;
@@ -100,33 +100,28 @@ public:
 // Parallel for loop
 #pragma omp parallel for
         for (int i = 0; i < m_prefetched_frame_buffers.size(); i++)
-          FrameGetterImpl::getNextFrame(m_prefetched_frame_buffers[i].get());
+          FrameGetterImpl::getNextFrame(i, m_prefetched_frame_buffers[i].get());
       } else
         // Serial for loop
         for (size_t i = 0; i < m_prefetched_frame_buffers.size(); i++)
-          FrameGetterImpl::getNextFrame(m_prefetched_frame_buffers[i].get());
+          FrameGetterImpl::getNextFrame(i, m_prefetched_frame_buffers[i].get());
     }
   }
 
-  bool getNextFrame(unsigned char *ptr)
+  bool getNextFrame(unsigned long frame_nr, unsigned char *ptr) override
   {
     DEB_MEMBER_FUNCT();
 
-    unsigned long idx = m_frame_nr % m_prefetched_frame_buffers.size();
+    unsigned long idx = frame_nr % m_prefetched_frame_buffers.size();
     assert(idx < m_prefetched_frame_buffers.size());
 
     unsigned char *src = m_prefetched_frame_buffers[idx].get();
     std::memcpy(ptr, src, m_mem_size);
 
-    ++m_frame_nr;
     return true;
   }
 
-  unsigned long getFrameNr() const { return m_frame_nr; }
-  void resetFrameNr(unsigned long frame_nr = 0) { m_frame_nr = frame_nr; };
-
 private:
-  unsigned long m_frame_nr;                           //<! The current frame number
   std::vector<buffer_t> m_prefetched_frame_buffers;   //<! A vector of frame buffers
   int m_mem_size;                                     //<! The size of a mem buffer
 };

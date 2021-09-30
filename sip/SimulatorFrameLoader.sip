@@ -30,9 +30,6 @@ class FrameLoader
 %End
 
 public:
-    unsigned long getFrameNr() const;
-    void resetFrameNr(unsigned long frame_nr = 0);
-
     void setFrameDim(const FrameDim& frame_dim);
     void getFrameDim(FrameDim& frame_dim /Out/) const;
 

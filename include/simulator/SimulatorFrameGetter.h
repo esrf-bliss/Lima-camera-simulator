@@ -46,10 +46,7 @@ struct SIMULATOR_EXPORT FrameGetter : public HwMaxImageSizeCallbackGen {
 
   virtual void prepareAcq() = 0;
 
-  virtual bool getNextFrame(unsigned char *ptr) = 0;
-
-  virtual unsigned long getFrameNr() const              = 0;
-  virtual void resetFrameNr(unsigned long frame_nr = 0) = 0;
+  virtual bool getNextFrame(unsigned long frame_nr, unsigned char *ptr) = 0;
 
   virtual void setFrameDim(const FrameDim &frame_dim) = 0;
   virtual void getFrameDim(FrameDim &frame_dim) const = 0;

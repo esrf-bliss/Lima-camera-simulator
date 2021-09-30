@@ -99,7 +99,6 @@ void FrameBuilder::init(FrameDim &frame_dim, Bin &bin, Roi &roi, const PeakList 
   m_rot_axis  = RotationY;
 
   m_grow_factor = grow_factor;
-  m_frame_nr    = 0;
   m_rot_angle   = 0;
   m_rot_speed   = 0;
   m_diffract_x  = frame_dim.getSize().getWidth() / 2;
@@ -479,11 +478,11 @@ double FrameBuilder::gauss2D(double x, double y, double x0, double y0, double fw
   return max * exp(-((x - x0) * (x - x0) + (y - y0) * (y - y0)) / (2 * sigma * sigma));
 }
 
-FrameBuilder::PeakList FrameBuilder::getGaussPeaksFrom3d(double angle)
+FrameBuilder::PeakList FrameBuilder::getGaussPeaksFrom3d(double angle) const
 {
   PeakList gauss_peaks;
-  PeakList::iterator pit, pend            = m_peaks.end();
-  std::vector<double>::iterator ait, aend = m_peak_angles.end();
+  PeakList::const_iterator pit, pend            = m_peaks.end();
+  std::vector<double>::const_iterator ait, aend = m_peak_angles.end();
 
   int rot_y  = (m_rot_axis == RotationY);
   Size size  = m_frame_dim.getSize();
@@ -531,7 +530,7 @@ double FrameBuilder::dataDiffract(double x, double y) const
  * @param[in] y  int Y-coord
  * @return    intensity  double
  *******************************************************************/
-double FrameBuilder::dataXY(const PeakList &peaks, int x, int y) const
+double FrameBuilder::dataXY(unsigned long frame_nr, const PeakList &peaks, int x, int y) const
 {
   double val = 0.0;
   PeakList::const_iterator p;
@@ -542,14 +541,14 @@ double FrameBuilder::dataXY(const PeakList &peaks, int x, int y) const
     gx = x;
     gy = y;
   } else {
-    gx = m_diffract_x + m_frame_nr * m_diffract_sx;
-    gy = m_diffract_y + m_frame_nr * m_diffract_sy;
+    gx = m_diffract_x + frame_nr * m_diffract_sx;
+    gy = m_diffract_y + frame_nr * m_diffract_sy;
   }
 
   for (p = peaks.begin(); p != peaks.end(); ++p) {
     val += gauss2D(gx, gy, p->x0, p->y0, p->fwhm, p->max);
   }
-  val *= (1 + m_grow_factor * m_frame_nr);
+  val *= (1 + m_grow_factor * frame_nr);
 
   if (m_fill_type == Diffraction) val *= dataDiffract(x, y);
 
@@ -568,7 +567,7 @@ double FrameBuilder::dataXY(const PeakList &peaks, int x, int y) const
  *allocated buffer
  *******************************************************************/
 template <class depth>
-void FrameBuilder::fillData(unsigned char *ptr)
+void FrameBuilder::fillData(unsigned long frame_nr, unsigned char *ptr) const
 {
   int x, bx, bx0, bxM, y, by, by0, byM;
   int binX   = m_bin.getX();
@@ -589,7 +588,7 @@ void FrameBuilder::fillData(unsigned char *ptr)
     byM       = height / binY;
   }
 
-  double rot_angle = m_rot_angle + m_rot_speed * m_frame_nr;
+  double rot_angle = m_rot_angle + m_rot_speed * frame_nr;
   PeakList peaks   = getGaussPeaksFrom3d(rot_angle);
 
   max = (double)((depth)-1);
@@ -598,7 +597,7 @@ void FrameBuilder::fillData(unsigned char *ptr)
       data = 0.0;
       for (y = by * binY; y < by * binY + binY; y++) {
         for (x = bx * binX; x < bx * binX + binX; x++) {
-          data += dataXY(peaks, x, y);
+          data += dataXY(frame_nr, peaks, x, y);
         }
       }
       if (data > max) data = max; // ???
@@ -616,44 +615,21 @@ void FrameBuilder::fillData(unsigned char *ptr)
  * @exception lima::Exception  The image depth is not
  *1,2 or 4
  *******************************************************************/
-bool FrameBuilder::getNextFrame(unsigned char *ptr)
+bool FrameBuilder::getNextFrame(unsigned long frame_nr, unsigned char *ptr)
 {
   switch (m_frame_dim.getDepth()) {
   case 1:
-    fillData<unsigned char>(ptr);
+    fillData<unsigned char>(frame_nr, ptr);
     break;
   case 2:
-    fillData<unsigned short>(ptr);
+    fillData<unsigned short>(frame_nr, ptr);
     break;
   case 4:
-    fillData<unsigned int>(ptr);
+    fillData<unsigned int>(frame_nr, ptr);
     break;
   default:
     throw LIMA_HW_EXC(NotSupported, "Invalid depth");
   }
-  ++m_frame_nr;
 
   return true;
-}
-
-/**
- * @brief Sets the internal frame number to a value.
- *Default is 0.
- *
- * @param[in] frame_nr  int  The frame number, or
- *nothing
- *******************************************************************/
-void FrameBuilder::resetFrameNr(unsigned long frame_nr)
-{
-  m_frame_nr = frame_nr;
-}
-
-/**
- * @brief Gets the internal frame number
- *
- * @return  unsigned long  The frame number.
- *******************************************************************/
-unsigned long FrameBuilder::getFrameNr() const
-{
-  return m_frame_nr;
 }

@@ -141,9 +141,6 @@ public:
 
 	void getEffectiveFrameDim(FrameDim &dim /Out/ ) const;
 
-	unsigned long getFrameNr();
-	void resetFrameNr( int frame_nr=0 );
-
 	void getMaxImageSize(Size& max_size /Out/);
 
 	void getBin( Bin &bin /Out/ ) const;

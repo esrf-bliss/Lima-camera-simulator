@@ -256,7 +256,7 @@ void FrameLoader::prepareAcq()
   }
 }
 
-bool FrameLoader::getNextFrame(unsigned char *ptr)
+bool FrameLoader::getNextFrame(unsigned long frame_nr, unsigned char *ptr)
 {
   DEB_MEMBER_FUNCT();
 

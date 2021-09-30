@@ -110,7 +110,6 @@ void Camera::SimuThread::execStartAcq()
     buffer_mgr.setStartTimestamp(Timestamp::now());
 
     FrameGetter *frame_getter = m_simu->m_frame_getter;
-    frame_getter->resetFrameNr(m_acq_frame_nb);
 
     int nb_frames = (m_simu->m_trig_mode == IntTrig || m_simu->m_trig_mode == ExtTrigSingle) ? m_simu->m_nb_frames : m_acq_frame_nb + 1;
     int &frame_nb = m_acq_frame_nb;
@@ -133,7 +132,7 @@ void Camera::SimuThread::execStartAcq()
       DEB_TRACE() << DEB_VAR1(frame_dim);
 
       // Get the next frame
-      bool res = frame_getter->getNextFrame(ptr);
+      bool res = frame_getter->getNextFrame(frame_nb, ptr);
       if (!res)
         throw LIMA_HW_EXC(InvalidValue, "Failed to get next frame");
 
