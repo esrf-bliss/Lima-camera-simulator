@@ -93,6 +93,9 @@ public:
   void setTrigMode(TrigMode trig_mode) { m_trig_mode = trig_mode; };
   void getTrigMode(TrigMode &trig_mode) { trig_mode = m_trig_mode; };
 
+  void setPixelSize(double x_size, double y_size);
+  void getPixelSize(double &x_size, double &y_size);
+
   void setFrameDim(const FrameDim &frame_dim);
   void getFrameDim(FrameDim &frame_dim);
 
@@ -154,6 +157,9 @@ private:
   double m_exp_time;
   double m_lat_time;
   int m_nb_frames;
+
+  double m_x_size = 1e-6;
+  double m_y_size = 1e-6;
 
   TrigMode m_trig_mode;
 

@@ -83,6 +83,9 @@ public:
 	void setLatTime(double  lat_time);
 	void getLatTime(double& lat_time /Out/);
 
+	void setPixelSize(double x_size, double y_size);
+	void getPixelSize(double &x_size, double &y_size);
+
 	void setFrameDim(const FrameDim& frame_dim);
 	void getFrameDim(FrameDim& frame_dim /Out/);
 

@@ -61,7 +61,7 @@ void DetInfoCtrlObj::getCurrImageType(ImageType &curr_image_type)
 
 void DetInfoCtrlObj::getPixelSize(double &x_size, double &y_size)
 {
-  x_size = y_size = 1e-6;
+  m_simu.getPixelSize(x_size, y_size);
 }
 
 void DetInfoCtrlObj::getDetectorType(std::string &det_type)

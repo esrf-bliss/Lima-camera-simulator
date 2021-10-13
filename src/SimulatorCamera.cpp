@@ -237,6 +237,22 @@ void Camera::setMode(const Mode &mode)
   }
 }
 
+void Camera::setPixelSize(double x_size, double y_size)
+{
+  DEB_MEMBER_FUNCT();
+
+  this->m_x_size = x_size;
+  this->m_y_size = y_size;
+}
+
+void Camera::getPixelSize(double &x_size, double &y_size)
+{
+  DEB_MEMBER_FUNCT();
+
+  x_size = this->m_x_size;
+  y_size = this->m_y_size;
+}
+
 void Camera::setFrameDim(const FrameDim &frame_dim)
 {
   DEB_MEMBER_FUNCT();
