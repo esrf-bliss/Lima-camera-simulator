@@ -163,7 +163,7 @@ private:
   FrameGetter *m_frame_getter; //<! The current frame getter (according to the mode)
 
   HwMaxImageSizeCallback *m_cbk; //<! Keep a reference to the HwMaxImageSizeCallback (used when switching between FrameGetter)
-  
+
   SimuThread m_thread;
 };
 
