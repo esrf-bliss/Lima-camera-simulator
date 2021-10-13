@@ -120,6 +120,10 @@ class Simulator(PyTango.Device_4Impl):
             frame_dim = self.getFrameDimFromLongArray(self.frame_dim)
             _SimuCamera.setFrameDim(frame_dim)
 
+        if self.pixel_size:
+            pixel_size = self.pixel_size
+            _SimuCamera.setPixelSize(pixel_size[0], pixel_size[1])
+
         self.set_state(PyTango.DevState.ON)
 
     @Core.DEB_MEMBER_FUNCT
@@ -220,6 +224,9 @@ class SimulatorClass(PyTango.DeviceClass):
         'frame_dim':
         [PyTango.DevVarLongArray,
          "Frame dimension in the form: width, height, depth", []],
+        'pixel_size':
+        [PyTango.DevVarDoubleArray,
+         "Pixel size in the form: width, height (in meter)", []],
         'mode':
         [PyTango.DevString,
          "Simulator mode: GENERATOR, GENERATOR_PREFETCH, LOADER, LOADER_PREFETCH",[]],
