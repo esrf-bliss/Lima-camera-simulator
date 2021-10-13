@@ -170,3 +170,28 @@ def test_update_mode():
 
     dim = ct.image().getImageDim()
     assert dim.getSize() == Core.Size(100, 100)
+
+
+def test_default_pixel_size():
+    """Create the simulator camera
+
+    Check the default pixel size
+    """
+    cam = Simulator.Camera()
+    hw = Simulator.Interface(cam)
+    detInfo = hw.getHwCtrlObj(Core.HwCap.DetInfo)
+    pixelsize = detInfo.getPixelSize()
+    assert pixelsize == (1e-6, 1e-6)
+
+
+def test_custom_pixel_size():
+    """Change the simulator pixel size
+
+    Check that the pixel size is the expected one
+    """
+    cam = Simulator.Camera()
+    cam.setPixelSize(1e-3, 1e-4)
+    hw = Simulator.Interface(cam)
+    detInfo = hw.getHwCtrlObj(Core.HwCap.DetInfo)
+    pixelsize = detInfo.getPixelSize()
+    assert pixelsize == (1e-3, 1e-4)
