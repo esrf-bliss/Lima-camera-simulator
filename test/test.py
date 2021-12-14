@@ -121,7 +121,7 @@ def test_external_trigger_multi():
     assert acq_status.last_image_ready == 2
 
 
-def test_detector_size():
+def test_small_detector_size():
     """Change the size of the simulator
 
     Make sure the hardware detector size matches the request
@@ -135,6 +135,22 @@ def test_detector_size():
 
     detinfo = hw.getHwCtrlObj(Core.HwCap.DetInfo)
     assert detinfo.getMaxImageSize() == Core.Size(100, 100)
+
+
+def test_big_detector_size():
+    """Change the size of the simulator
+
+    Make sure the hardware detector size matches the request
+    """
+    cam = Simulator.Camera()
+    hw = Simulator.Interface(cam)
+    ct = Core.CtControl(hw)
+    cam.setFrameDim(Core.FrameDim(2048, 2000, Core.Bpp32))
+    dim = ct.image().getImageDim()
+    assert dim.getSize() == Core.Size(2048, 2000)
+
+    detinfo = hw.getHwCtrlObj(Core.HwCap.DetInfo)
+    assert detinfo.getMaxImageSize() == Core.Size(2048, 2000)
 
 
 def test_update_mode():
