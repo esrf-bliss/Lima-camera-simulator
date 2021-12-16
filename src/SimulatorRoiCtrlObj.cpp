@@ -46,6 +46,9 @@ void RoiCtrlObj::checkRoi(const Roi &set_roi, Roi &hw_roi)
   hw_roi = set_roi;
   if (builder)
     builder->checkRoi(hw_roi);
-  else
-    hw_roi = Roi();
+  else {
+    Size max_size;
+    m_simu.getMaxImageSize(max_size);
+    hw_roi = Roi({0, 0}, max_size);
+  }
 }
