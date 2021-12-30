@@ -97,6 +97,8 @@ public:
 
 	void reset();
 
+	virtual void fillData(Data&);
+
 	SIP_PYOBJECT __repr__() const;
 %MethodCode
 	LIMA_REPR_CODE

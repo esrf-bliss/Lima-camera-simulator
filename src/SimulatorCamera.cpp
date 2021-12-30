@@ -101,6 +101,45 @@ void Camera::SimuThread::execPrepareAcq()
   }
 }
 
+Data::TYPE dataTypeFromImageType(int imageType)
+{
+  switch(imageType)
+  {
+    case ImageType::Bpp8:
+	  return Data::UINT8;
+    case ImageType::Bpp8S:
+	  return Data::INT8;
+    case ImageType::Bpp16:
+	  return Data::UINT16;
+    case ImageType::Bpp16S:
+	  return Data::INT16;
+    case ImageType::Bpp32:
+	  return Data::UINT32;
+    case ImageType::Bpp32S:
+	  return Data::INT32;
+    case ImageType::Bpp32F:
+	  return Data::FLOAT;
+    case ImageType::Bpp64:
+	  return Data::UINT64;
+    case ImageType::Bpp64S:
+	  return Data::INT64;
+    case ImageType::Bpp1:
+    case ImageType::Bpp4:
+    case ImageType::Bpp6:
+    case ImageType::Bpp10:
+    case ImageType::Bpp10S:
+    case ImageType::Bpp12:
+    case ImageType::Bpp12S:
+    case ImageType::Bpp14:
+    case ImageType::Bpp14S:
+    case ImageType::Bpp24:
+    case ImageType::Bpp24S:
+      throw LIMA_HW_EXC(InvalidValue, "ImageType unsupported in the simulator");
+    default:
+      throw LIMA_HW_EXC(InvalidValue, "ImageType unknown");
+  }
+}
+
 void Camera::SimuThread::execStartAcq()
 {
   DEB_MEMBER_FUNCT();
@@ -127,7 +166,7 @@ void Camera::SimuThread::execStartAcq()
 
       setStatus(Readout);
       unsigned char *ptr = reinterpret_cast<unsigned char *>(buffer_mgr.getFrameBufferPtr(frame_nb));
-      
+
       FrameDim frame_dim = buffer_mgr.getFrameDim();
       DEB_TRACE() << DEB_VAR1(frame_dim);
 
@@ -135,6 +174,22 @@ void Camera::SimuThread::execStartAcq()
       bool res = frame_getter->getFrame(frame_nb, ptr);
       if (!res)
         throw LIMA_HW_EXC(InvalidValue, "Failed to get next frame");
+
+      {
+          Data *data = new Data();
+          Buffer *buffer = new Buffer();
+          buffer->data = ptr;
+          buffer->ref();
+          data->frameNumber = frame_nb;
+          data->type = dataTypeFromImageType(frame_dim.getImageType());
+          data->dimensions.push_back(frame_dim.getSize().getWidth());
+          data->dimensions.push_back(frame_dim.getSize().getHeight());
+          data->buffer = buffer;
+          m_simu->fillData(*data);
+          delete data;
+          buffer->data = NULL;
+          delete buffer;
+      }
 
       HwFrameInfoType frame_info;
       frame_info.acq_frame_nb = frame_nb;
@@ -188,6 +243,16 @@ void Camera::setDefaultProperties()
   m_exp_time  = 1.0;
   m_lat_time  = 0.0;
   m_nb_frames = 1;
+}
+
+/**
+ * Called after the framer builder to fill extra data.
+ *
+ * Provides an easy way to create custom simulator
+ * implemented in Python.
+ */
+void Camera::fillData(Data&)
+{
 }
 
 void Camera::constructFrameGetter()

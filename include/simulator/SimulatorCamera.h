@@ -31,6 +31,7 @@
 #include <lima/HwBufferMgr.h>
 #include <lima/ThreadUtils.h>
 #include <lima/SizeUtils.h>
+#include <processlib/Data.h>
 
 #include <simulator_export.h>
 
@@ -108,6 +109,8 @@ public:
   void reset();
 
   void setHwMaxImageSizeCallback(HwMaxImageSizeCallback *cbk);
+
+  virtual void fillData(Data&);
 
 private:
   class SimuThread : public CmdThread {

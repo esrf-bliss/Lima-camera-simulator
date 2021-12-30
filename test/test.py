@@ -13,8 +13,13 @@ pytest test/test.py::test_internal_trigger
 
 """
 
+import numpy
 import time
+import logging
 from Lima import Core, Simulator
+
+
+_logger = logging.getLogger(__name__)
 
 
 class AcquisitionStatusFromImageStatusCallback(Core.CtControl.ImageStatusCallback):
@@ -195,3 +200,35 @@ def test_custom_pixel_size():
     detInfo = hw.getHwCtrlObj(Core.HwCap.DetInfo)
     pixelsize = detInfo.getPixelSize()
     assert pixelsize == (1e-3, 1e-4)
+
+
+def test_custom_frame():
+
+    process_count = 0
+
+    class MyCamera(Simulator.Camera):
+        def fillData(self, data):
+            nonlocal process_count
+            assert data.frameNumber == 0
+            assert data.buffer.shape == (1024, 1024)
+            assert data.buffer.dtype == numpy.uint32
+            # The buffer is writable
+            data.buffer[0, 0] = 1
+            data.buffer[-1, -1] = 1
+            process_count += 1
+
+    cam = MyCamera()
+    hw = Simulator.Interface(cam)
+    ct = Core.CtControl(hw)
+
+    ct.prepareAcq()
+    ct.startAcq()
+
+    for _ in range(20):
+        if ct.getStatus().AcquisitionStatus != Core.AcqRunning:
+            break
+        time.sleep(0.1)
+    else:
+        assert False, "Simulator is still running"
+
+    assert process_count == 1
