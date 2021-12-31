@@ -85,7 +85,10 @@ class Simulator(PyTango.Device_4Impl):
         self.__RotationAxis = self._RotationAxis
         self.__FillType = self._FillType
 
+        # Load the properties
+        self.get_device_properties(self.get_device_class())
         self.init_device()
+        self.set_state(PyTango.DevState.ON)
 
 #------------------------------------------------------------------
 #    Device destructor
@@ -98,10 +101,6 @@ class Simulator(PyTango.Device_4Impl):
 #------------------------------------------------------------------
     @Core.DEB_MEMBER_FUNCT
     def init_device(self):
-
-        # Load the properties
-        self.get_device_properties(self.get_device_class())
-
         # Apply properties if any
         if self.mode and (Simulator._Mode.get(self.mode) != None):
             self._SimuCamera.setMode(Simulator._Mode[self.mode])
@@ -116,8 +115,6 @@ class Simulator(PyTango.Device_4Impl):
         if self.pixel_size:
             pixel_size = self.pixel_size
             _SimuCamera.setPixelSize(pixel_size[0], pixel_size[1])
-
-        self.set_state(PyTango.DevState.ON)
 
     @Core.DEB_MEMBER_FUNCT
     def getFrameDimFromLongArray(self, dim_arr):
