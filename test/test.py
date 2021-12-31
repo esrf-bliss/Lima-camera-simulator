@@ -232,3 +232,72 @@ def test_custom_frame():
         assert False, "Simulator is still running"
 
     assert process_count == 1
+
+
+def test_gauss_fill():
+    """
+    Test that the gauss fill increase frame after frame
+    """
+    processed_frames = []
+
+    class MyCamera(Simulator.Camera):
+        def fillData(self, data):
+            nonlocal processed_frames
+            s = numpy.sum(data.buffer)
+            processed_frames.append(s)
+
+    cam = MyCamera()
+    hw = Simulator.Interface(cam)
+    ct = Core.CtControl(hw)
+
+    acq = ct.acquisition()
+    acq.setTriggerMode(Core.IntTrig)
+    acq.setAcqNbFrames(3)
+    acq.setAcqExpoTime(0.01)
+
+    ct.prepareAcq()
+    ct.startAcq()
+
+    for _ in range(30):
+        if ct.getStatus().AcquisitionStatus != Core.AcqRunning:
+            break
+        time.sleep(0.1)
+    else:
+        assert False, "Simulator is still running"
+
+    assert processed_frames == [1096524, 2225892, 3356544]
+
+
+def test_empty_fill():
+    """
+    Test that the empty fill provides empty frames
+    """
+    processed_frames = []
+
+    class MyCamera(Simulator.Camera):
+        def fillData(self, data):
+            nonlocal processed_frames
+            s = numpy.sum(data.buffer)
+            processed_frames.append(s)
+
+    cam = MyCamera()
+    cam.getFrameGetter().setFillType(Simulator.FrameBuilder.Empty)
+    hw = Simulator.Interface(cam)
+    ct = Core.CtControl(hw)
+
+    acq = ct.acquisition()
+    acq.setTriggerMode(Core.IntTrig)
+    acq.setAcqNbFrames(3)
+    acq.setAcqExpoTime(0.01)
+
+    ct.prepareAcq()
+    ct.startAcq()
+
+    for _ in range(30):
+        if ct.getStatus().AcquisitionStatus != Core.AcqRunning:
+            break
+        time.sleep(0.1)
+    else:
+        assert False, "Simulator is still running"
+
+    assert processed_frames == [0, 0, 0]

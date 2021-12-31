@@ -641,6 +641,10 @@ void FrameBuilder::fillData(unsigned long frame_nr, unsigned char *ptr) const
  *******************************************************************/
 bool FrameBuilder::getFrame(unsigned long frame_nr, unsigned char *ptr)
 {
+  if (m_fill_type == Empty) {
+    return true;
+  }
+
   switch (m_frame_dim.getDepth()) {
   case 1:
     fillData<unsigned char>(frame_nr, ptr);

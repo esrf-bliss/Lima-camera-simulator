@@ -63,6 +63,7 @@ class Simulator(PyTango.Device_4Impl):
     _FillType = {
         'GAUSS':       SimuMod.FrameBuilder.Gauss,
         'DIFFRACTION': SimuMod.FrameBuilder.Diffraction,
+        'EMPTY':       SimuMod.FrameBuilder.Empty,
 	}
 
     Core.DEB_CLASS(Core.DebModApplication, 'LimaSimulator')

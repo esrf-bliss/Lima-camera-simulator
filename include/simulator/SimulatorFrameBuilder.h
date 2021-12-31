@@ -59,6 +59,7 @@ public:
   enum FillType {
     Gauss,
     Diffraction,
+    Empty,
   };
   enum RotationAxis {
     Static,

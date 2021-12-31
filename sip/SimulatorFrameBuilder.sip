@@ -125,7 +125,7 @@ class FrameBuilder
 
 public:
 	enum FillType {
-		Gauss, Diffraction,
+		Gauss, Diffraction, Empty,
 	};
 	enum RotationAxis {
 		RotationX, RotationY,

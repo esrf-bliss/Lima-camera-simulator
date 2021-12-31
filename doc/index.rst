@@ -63,7 +63,7 @@ The class :cpp:class:`FrameBuilder` can be parametrized with:
  - :cpp:func:`setFrameDim()`: set a new frame dimension (max. is 1024x1024)
  - :cpp:func:`setPeaks()`: set a list of GaussPeak positions (GaussPeak struct -> x, y, fwhm, max)
  - :cpp:func:`setPeakAngles()`: set a list of GaussPeak angles
- - :cpp:func:`setFillType()`:  set the image fill type Gauss or Diffraction (default is Gauss)
+ - :cpp:func:`setFillType()`:  set the image fill type Gauss or Diffraction or Empty (default is Gauss)
  - :cpp:func:`setRotationAxis()`:  set the rotation axis policy Static, RotationX or RotationY (default is RotationY)
  - :cpp:func:`setRotationAngle()`: set a peak rotation angle in deg (default is 0)
  - :cpp:func:`setRotationSpeed()`: set a peak rotation speed ixin deg/frame (default is 0)
