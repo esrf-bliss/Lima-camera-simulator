@@ -116,6 +116,23 @@ class Simulator(PyTango.Device_4Impl):
             pixel_size = self.pixel_size
             _SimuCamera.setPixelSize(pixel_size[0], pixel_size[1])
 
+        if self.peaks:
+            peaks = self.peaks
+            if isinstance(peaks, str):
+                peaks = peaks.split(',')
+            if isinstance(peaks[0], str):
+                peaks = map(float, peaks)
+            gauss_peaks = self.getGaussPeaksFromFloatArray(peaks)
+            self._SimuCamera.getFrameGetter().setPeaks(gauss_peaks)
+
+        if self.peak_angles:
+            peak_angles = self.peak_angles
+            if type(peak_angles) == str:
+                peak_angles = peak_angles.split(',')
+            if type(peak_angles[0]) == str:
+                peak_angles = map(float, peak_angles)
+            self._SimuCamera.getFrameGetter().setPeakAngles(peak_angles)
+
     @Core.DEB_MEMBER_FUNCT
     def getFrameDimFromLongArray(self, dim_arr):
         width, height, depth = dim_arr
@@ -334,26 +351,9 @@ def get_control(
     """
     interface = _Simulator._SimuInterface
     camera = _Simulator._SimuCamera
-
     if interface is None:
         camera = _Camera()
         interface = _Interface(camera)
-
-        if peaks:
-            if (type(peaks) != str and getattr(peaks, '__getitem__', None) and
-                type(peaks[0]) == str):
-                peaks = ','.join(peaks)
-            if type(peaks) == str:
-                peaks = map(float, peaks.split(','))
-            gauss_peaks = _Simulator.getGaussPeaksFromFloatArray(peaks)
-            camera.getFrameGetter().setPeaks(gauss_peaks)
-        if peak_angles:
-            if type(peak_angles) == str:
-                peak_angles = peak_angles.split(',')
-            if type(peak_angles[0]) == str:
-                peak_angles = map(float, peak_angles)
-            camera.getFrameGetter().setPeakAngles(peak_angles)
-
     control = Core.CtControl(interface)
     _Simulator._SimuCamera = camera
     _Simulator._SimuInterface = interface
