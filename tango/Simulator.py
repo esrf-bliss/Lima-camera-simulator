@@ -127,9 +127,9 @@ class Simulator(PyTango.Device_4Impl):
 
         if self.peak_angles:
             peak_angles = self.peak_angles
-            if type(peak_angles) == str:
+            if isinstance(peak_angles, str):
                 peak_angles = peak_angles.split(',')
-            if type(peak_angles[0]) == str:
+            if isinstance(peak_angles[0], str):
                 peak_angles = map(float, peak_angles)
             self._SimuCamera.getFrameGetter().setPeakAngles(peak_angles)
 
