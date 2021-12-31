@@ -75,22 +75,9 @@ class Simulator(PyTango.Device_4Impl):
 
         # Leagcy code used by AttrHelper
         # switch to the new pyTango please
-        self.__Mode = {
-            'GENERATOR': SimuMod.Camera.MODE_GENERATOR,
-            'GENERATOR_PREFETCH': SimuMod.Camera.MODE_GENERATOR_PREFETCH,
-            'LOADER': SimuMod.Camera.MODE_LOADER,
-            'LOADER_PREFETCH': SimuMod.Camera.MODE_LOADER_PREFETCH,
-    	}
-
-        self.__RotationAxis = {
-            'ROTATIONX': SimuMod.FrameBuilder.RotationX,
-            'ROTATIONY': SimuMod.FrameBuilder.RotationY,
-    	}
-
-        self.__FillType = {
-            'GAUSS':       SimuMod.FrameBuilder.Gauss,
-            'DIFFRACTION': SimuMod.FrameBuilder.Diffraction,
-    	}
+        self.__Mode = self._Mode
+        self.__RotationAxis = self._RotationAxis
+        self.__FillType = self._FillType
 
         self.init_device()
 
