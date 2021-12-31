@@ -336,14 +336,7 @@ def get_control(
     camera = _Simulator._SimuCamera
 
     if interface is None:
-
-        # If initial mode is specified, pass it to the constructor
-        if mode is not None:
-            mode = _Simulator._Mode[mode]
-            camera = _Camera(mode)
-        else:
-            camera = _Camera()
-
+        camera = _Camera()
         interface = _Interface(camera)
 
         if peaks:
