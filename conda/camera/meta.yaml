@@ -31,7 +31,7 @@ test:
   imports:
     - Lima.Simulator
   commands:
-    - pytest test/test.py test/test_tango.py
+    - pytest test
 
 about:
   home: https://github.com/esrf-bliss/Lima

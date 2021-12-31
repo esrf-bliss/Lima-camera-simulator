@@ -32,8 +32,8 @@ from Lima import Simulator
 
 Core.DEB_GLOBAL(Core.DebModTest)
 
-class TestControl:
-	Core.DEB_CLASS(Core.DebModTest, 'TestControl')
+class CheckControl:
+	Core.DEB_CLASS(Core.DebModTest, 'CheckControl')
 
 	class ImageStatusCallback(Core.CtControl.ImageStatusCallback):
 		def __init__(self, test_control, cb_end):
@@ -101,11 +101,11 @@ class TestControl:
 		data = b' ' + image.buffer.tostring()
 
 
-class TestControlAutoSync:
-	Core.DEB_CLASS(Core.DebModTest, 'TestControlAutoSync')
+class CheckControlAutoSync:
+	Core.DEB_CLASS(Core.DebModTest, 'CheckControlAutoSync')
 
 	def __init__(self):
-		self.test_control = TestControl()
+		self.test_control = CheckControl()
 		self.traceRefCount(1)
 
 	def __del__(self):
@@ -136,7 +136,7 @@ def main(argv):
 
 	exp_time = 0.1
 
-	test_control = TestControlAutoSync()
+	test_control = CheckControlAutoSync()
 
 	i = 0
 	nb_frames = 2
@@ -166,6 +166,11 @@ def main(argv):
 			deb.Always('Got good exception: %s' % e)
 	if not ok:
 		raise RuntimeError('Expected exception: %s' % err)
+
+
+def test_prepare_timeout():
+	main([])
+
 
 if __name__ == '__main__':
 	main(sys.argv)
