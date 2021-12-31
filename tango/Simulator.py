@@ -46,6 +46,11 @@ class Simulator(PyTango.Device_4Impl):
 #------------------------------------------------------------------
 #    Static properties
 #------------------------------------------------------------------
+    _SimuCamera = None
+    """Reference to Lima simulator camera binding"""
+    _SimuInterface = None
+    """Reference to Lima simulator interface binding"""
+
     _Mode = {
         'GENERATOR': SimuMod.Camera.MODE_GENERATOR,
         'GENERATOR_PREFETCH': SimuMod.Camera.MODE_GENERATOR_PREFETCH,
@@ -99,14 +104,14 @@ class Simulator(PyTango.Device_4Impl):
 
         # Apply properties if any
         if self.mode and (Simulator._Mode.get(self.mode) != None):
-            _SimuCamera.setMode(Simulator._Mode[self.mode])
+            self._SimuCamera.setMode(Simulator._Mode[self.mode])
 
         if 'PREFETCH' in self.mode and self.nb_prefetched_frames:
-            _SimuCamera.getFrameGetter().setNbPrefetchedFrames(self.nb_prefetched_frames)
+            self._SimuCamera.getFrameGetter().setNbPrefetchedFrames(self.nb_prefetched_frames)
 
         if self.frame_dim:
             frame_dim = self.getFrameDimFromLongArray(self.frame_dim)
-            _SimuCamera.setFrameDim(frame_dim)
+            self._SimuCamera.setFrameDim(frame_dim)
 
         if self.pixel_size:
             pixel_size = self.pixel_size
@@ -137,13 +142,13 @@ class Simulator(PyTango.Device_4Impl):
         return AttrHelper.get_attr_string_value_list(self, attr_name)
 
     def trigExternal(self):
-        _SimuCamera.extTrigAcq()
+        self._SimuCamera.extTrigAcq()
 
     def __getattr__(self, name):
         try:
-            return AttrHelper.get_attr_4u(self, name, _SimuCamera.getFrameGetter(), False)
+            return AttrHelper.get_attr_4u(self, name, self._SimuCamera.getFrameGetter(), False)
         except:
-            return AttrHelper.get_attr_4u(self, name, _SimuCamera)
+            return AttrHelper.get_attr_4u(self, name, self._SimuCamera)
 
     @staticmethod
     def getGaussPeaksFromFloatArray(peak_list_flat):
@@ -152,7 +157,7 @@ class Simulator(PyTango.Device_4Impl):
         return gauss_peaks
 
     def read_peaks(self,attr):
-        gauss_peaks = _SimuCamera.getFrameGetter().getPeaks()
+        gauss_peaks = self._SimuCamera.getFrameGetter().getPeaks()
         peak_list = [(p.x0, p.y0, p.fwhm, p.max) for p in gauss_peaks]
         peak_list_flat = list(itertools.chain(*peak_list))
         attr.set_value(peak_list_flat)
@@ -160,49 +165,50 @@ class Simulator(PyTango.Device_4Impl):
     def write_peaks(self,attr) :
         peak_list_flat = attr.get_write_value()
         gauss_peaks = self.getGaussPeaksFromFloatArray(peak_list_flat)
-        _SimuCamera.getFrameGetter().setPeaks(gauss_peaks)
+        self._SimuCamera.getFrameGetter().setPeaks(gauss_peaks)
 
     def read_peak_angles(self,attr) :
-        peak_angle_list = _SimuCamera.getFrameGetter().getPeakAngles()
+        peak_angle_list = self._SimuCamera.getFrameGetter().getPeakAngles()
         attr.set_value(peak_angle_list)
 
     def write_peak_angles(self,attr) :
         peak_angle_list = attr.get_write_value()
-        _SimuCamera.getFrameGetter().setPeakAngles(map(float, peak_angle_list))
+        self._SimuCamera.getFrameGetter().setPeakAngles(map(float, peak_angle_list))
 
     def read_diffraction_pos(self,attr) :
-        x, y = _SimuCamera.getFrameGetter().getDiffractionPos()
+        x, y = self._SimuCamera.getFrameGetter().getDiffractionPos()
         attr.set_value((x, y))
 
     def write_diffraction_pos(self,attr) :
         x, y = attr.get_write_value()
-        _SimuCamera.getFrameGetter().setDiffractionPos(x, y)
+        self._SimuCamera.getFrameGetter().setDiffractionPos(x, y)
 
     def read_diffraction_speed(self,attr) :
-        sx, sy = _SimuCamera.getFrameGetter().getDiffractionSpeed()
+        sx, sy = self._SimuCamera.getFrameGetter().getDiffractionSpeed()
         attr.set_value((sx, sy))
 
     def write_diffraction_speed(self,attr) :
         sx, sy = attr.get_write_value()
-        _SimuCamera.getFrameGetter().setDiffractionSpeed(sx, sy)
+        self._SimuCamera.getFrameGetter().setDiffractionSpeed(sx, sy)
 
     def read_nb_prefetched_frames(self,attr) :
-        if (_SimuCamera.getMode() == SimuMod.Camera.MODE_GENERATOR_PREFETCH) or \
-           (_SimuCamera.getMode() == SimuMod.Camera.MODE_LOADER_PREFETCH) :
-            nb_prefetched_frames = _SimuCamera.getFrameGetter().getNbPrefetchedFrames()
+        print("read_nb_prefetched_frames")
+        if (self._SimuCamera.getMode() == SimuMod.Camera.MODE_GENERATOR_PREFETCH) or \
+           (self._SimuCamera.getMode() == SimuMod.Camera.MODE_LOADER_PREFETCH) :
+            nb_prefetched_frames = self._SimuCamera.getFrameGetter().getNbPrefetchedFrames()
         else :
             nb_prefetched_frames = 0
         attr.set_value(nb_prefetched_frames)
 
     def read_frame_dim(self,attr) :
-        frame_dim = _SimuCamera.getFrameDim()
+        frame_dim = self._SimuCamera.getFrameDim()
         dim_arr = self.getLongArrayFromFrameDim(frame_dim)
         attr.set_value(dim_arr)
 
     def write_frame_dim(self,attr) :
         dim_arr = attr.get_write_value()
         frame_dim = self.getFrameDimFromLongArray(dim_arr)
-        _SimuCamera.setFrameDim(frame_dim)
+        self._SimuCamera.setFrameDim(frame_dim)
 
 class SimulatorClass(PyTango.DeviceClass):
 
@@ -308,21 +314,40 @@ class SimulatorClass(PyTango.DeviceClass):
 #----------------------------------------------------------------------------
 # Plugins
 #----------------------------------------------------------------------------
-_SimuCamera = None
-_SimuInterface = None
 
-def get_control(peaks=[], peak_angles=[], **keys) :
-    global _SimuCamera, _SimuInterface
-    if _SimuInterface is None:
+def get_control(
+        peaks=[],
+        peak_angles=[],
+        mode=None,
+        _Simulator=Simulator,
+        _Camera=SimuMod.Camera,
+        _Interface=SimuMod.Interface,
+        **kwargs
+    ):
+    """
+    Called by LimaCCDs module to create Lima control object.
+
+    In the simulator scope, it also create the Lima camera, Lima interface
+    and register them into the Tango simulator class.
+
+    Arguments:
+        _Simulator: Tango class used to register Lima references
+        _Camera: Lima class to create the camera instance
+        _Interface: Lima class to create the interface instance
+    """
+    interface = _Simulator._SimuInterface
+    camera = _Simulator._SimuCamera
+
+    if interface is None:
 
         # If initial mode is specified, pass it to the constructor
-        if 'mode' in keys:
-            mode = Simulator._Mode[keys['mode']]
-            _SimuCamera = SimuMod.Camera(mode)
+        if mode is not None:
+            mode = _Simulator._Mode[mode]
+            camera = _Camera(mode)
         else:
-            _SimuCamera = SimuMod.Camera()
+            camera = _Camera()
 
-        _SimuInterface = SimuMod.Interface(_SimuCamera)
+        interface = _Interface(camera)
 
         if peaks:
             if (type(peaks) != str and getattr(peaks, '__getitem__', None) and
@@ -330,16 +355,20 @@ def get_control(peaks=[], peak_angles=[], **keys) :
                 peaks = ','.join(peaks)
             if type(peaks) == str:
                 peaks = map(float, peaks.split(','))
-            gauss_peaks = Simulator.getGaussPeaksFromFloatArray(peaks)
-            _SimuCamera.getFrameGetter().setPeaks(gauss_peaks)
+            gauss_peaks = _Simulator.getGaussPeaksFromFloatArray(peaks)
+            camera.getFrameGetter().setPeaks(gauss_peaks)
         if peak_angles:
             if type(peak_angles) == str:
                 peak_angles = peak_angles.split(',')
             if type(peak_angles[0]) == str:
                 peak_angles = map(float, peak_angles)
-            _SimuCamera.getFrameGetter().setPeakAngles(peak_angles)
+            camera.getFrameGetter().setPeakAngles(peak_angles)
 
-    return Core.CtControl(_SimuInterface)
+    control = Core.CtControl(interface)
+    _Simulator._SimuCamera = camera
+    _Simulator._SimuInterface = interface
+    return control
+
 
 def get_tango_specific_class_n_device():
-    return SimulatorClass,Simulator
+    return SimulatorClass, Simulator
