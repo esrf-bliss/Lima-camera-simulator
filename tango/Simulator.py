@@ -133,6 +133,10 @@ class Simulator(PyTango.Device_4Impl):
                 peak_angles = map(float, peak_angles)
             self._SimuCamera.getFrameGetter().setPeakAngles(peak_angles)
 
+        if self.fill_type and self.fill_type in Simulator._FillType:
+            fill_type = Simulator._FillType[self.fill_type]
+            self._SimuCamera.getFrameGetter().setFillType(fill_type)
+
     @Core.DEB_MEMBER_FUNCT
     def getFrameDimFromLongArray(self, dim_arr):
         width, height, depth = dim_arr

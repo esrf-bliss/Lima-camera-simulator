@@ -142,3 +142,16 @@ def test_property_frame_dim(cleanup_simulator):
     assert frame_dim.getSize().getWidth() == 10
     assert frame_dim.getSize().getHeight() == 20
     assert frame_dim.getImageType() == Core.Bpp32
+
+
+def test_property_fill_type(cleanup_simulator):
+    """Setup the fill_type from tango properties
+
+    Check that the fill_type was set
+    """
+    ct = Simulator.get_control()
+    properties = {"fill_type": "EMPTY"}
+    tango = MockedSimulator(properties)
+    camera = tango._SimuCamera
+    fill_type = camera.getFrameGetter().getFillType()
+    assert fill_type == Simulator.Simulator._FillType["EMPTY"]
