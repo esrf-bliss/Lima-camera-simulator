@@ -26,12 +26,6 @@
 import itertools
 import PyTango
 
-# python3 compat
-try:
-    from itertools import izip as zip
-except ImportError:
-    pass
-
 from Lima.Server import AttrHelper
 
 from Lima import Core
