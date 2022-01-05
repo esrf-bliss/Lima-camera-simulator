@@ -19,6 +19,14 @@ requirements:
     - lima-tango-server
     - lima-camera-simulator
 
+test:
+  source_files:
+    - test
+  requires:
+    - pytest
+  commands:
+    - pytest test/test_tango.py
+
 about:
   home: https://github.com/esrf-bliss/Lima
   license: GPL

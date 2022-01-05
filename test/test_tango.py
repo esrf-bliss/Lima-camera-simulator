@@ -18,15 +18,24 @@ import time
 import logging
 import pytest
 from Lima import Core
-from Lima.Server.camera import Simulator
 import mock
+
+try:
+    from Lima.Server.camera import Simulator
+
+    Camera = Simulator.Simulator
+except:
+    # Skip this tests if lima-camera-simulator-tango was not installed
+    pytestmark = pytest.mark.skip
+
+    class Camera:
+        pass
 
 
 _logger = logging.getLogger(__name__)
 
 
-class MockedSimulator(Simulator.Simulator):
-
+class MockedSimulator(Camera):
     def __init__(self, properties=None):
         """
         Attributes:
