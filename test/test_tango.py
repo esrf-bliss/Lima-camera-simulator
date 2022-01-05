@@ -18,7 +18,7 @@ import time
 import logging
 import pytest
 from Lima import Core
-import mock
+from unittest import mock
 
 try:
     from Lima.Server.camera import Simulator
