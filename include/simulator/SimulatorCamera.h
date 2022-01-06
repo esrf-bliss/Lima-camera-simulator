@@ -110,7 +110,7 @@ public:
 
   void setHwMaxImageSizeCallback(HwMaxImageSizeCallback *cbk);
 
-  virtual void fillData(Data&);
+  virtual void fillData(Data&) {}
 
 private:
   class SimuThread : public CmdThread {

@@ -176,19 +176,16 @@ void Camera::SimuThread::execStartAcq()
         throw LIMA_HW_EXC(InvalidValue, "Failed to get next frame");
 
       {
-          Data *data = new Data();
-          Buffer *buffer = new Buffer();
-          buffer->data = ptr;
-          buffer->ref();
-          data->frameNumber = frame_nb;
-          data->type = dataTypeFromImageType(frame_dim.getImageType());
-          data->dimensions.push_back(frame_dim.getSize().getWidth());
-          data->dimensions.push_back(frame_dim.getSize().getHeight());
-          data->buffer = buffer;
-          m_simu->fillData(*data);
-          delete data;
-          buffer->data = NULL;
-          delete buffer;
+          Data data;
+          Buffer buffer;
+          buffer.data = ptr;
+          buffer.owner = Buffer::MAPPED;
+          data.frameNumber = frame_nb;
+          data.type = dataTypeFromImageType(frame_dim.getImageType());
+          data.dimensions = { frame_dim.getSize().getWidth(), frame_dim.getSize().getHeight() };
+          data.setBuffer(&buffer);
+          m_simu->fillData(data);
+          data.releaseBuffer();
       }
 
       HwFrameInfoType frame_info;
@@ -243,16 +240,6 @@ void Camera::setDefaultProperties()
   m_exp_time  = 1.0;
   m_lat_time  = 0.0;
   m_nb_frames = 1;
-}
-
-/**
- * Called after the framer builder to fill extra data.
- *
- * Provides an easy way to create custom simulator
- * implemented in Python.
- */
-void Camera::fillData(Data&)
-{
 }
 
 void Camera::constructFrameGetter()
