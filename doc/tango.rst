@@ -15,8 +15,9 @@ peaks		No		N/A		A gauss peak list [x0,y0,w0,A0,x1,y1,w1,A1...]
 peak_angles	No		N/A		The base rotation angle for each peak
 fill_type	No		Gauss		The image fill type:  Gauss or Diffraction	
 rotation_axis	No		rotationy	Peak move policy: STATIC, ROTATIONX, ROTATIONY	
+frame_dim	No		1024, 1024, 4	Size of the frame. Width, height, depth. The depth is one of 1, 2, 4
+pixel_size	No		1e-6, 1e-6	Pixel size metadata in meter. Default is 1um pixel size
 =============== =============== =============== =========================================================================
-
 
 Attributes
 ----------
