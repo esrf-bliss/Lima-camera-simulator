@@ -204,7 +204,6 @@ class Simulator(PyTango.Device_4Impl):
         self._SimuCamera.getFrameGetter().setDiffractionSpeed(sx, sy)
 
     def read_nb_prefetched_frames(self,attr) :
-        print("read_nb_prefetched_frames")
         if (self._SimuCamera.getMode() == SimuMod.Camera.MODE_GENERATOR_PREFETCH) or \
            (self._SimuCamera.getMode() == SimuMod.Camera.MODE_LOADER_PREFETCH) :
             nb_prefetched_frames = self._SimuCamera.getFrameGetter().getNbPrefetchedFrames()
