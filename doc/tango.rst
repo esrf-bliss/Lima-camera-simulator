@@ -47,3 +47,107 @@ Status			DevVoid		DevString		Return the device state as a string
 getAttrStringValueList	DevString:	DevVarStringArray:	Return the authorized string value list for
 			Attribute name	String value list	a given attribute name
 =======================	=============== =======================	===========================================
+
+Custom LimaCCDs camera simulator
+--------------------------------
+
+A custom camera simulator can be created following this recipe.
+
+- Create a custom tango camera simulator
+- Create a dedicated LimaCCDs runner
+- Set/update the tango database
+
+Tango camera simulator
+''''''''''''''''''''''
+
+.. code-block:: python
+
+   # module myproject.MySimulator.py
+
+   from Lima import Core
+   from Lima import Simulator
+   import Lima.Server.camera.Simulator as TangoSimuMod
+
+   class MyCamera(Simulator.Camera):
+       """Derive the camera in order to custom the way to render the frame"""
+       def fillData(self, data):
+           # Increment the first pixel every frames
+           data.buffer[0, 0] = data.buffer[0, 0] + 1
+
+   class MySimulator(TangoSimuMod.Simulator):
+       """Derive the tango device in order to handle extra attributes/properties/commands implementation"""
+
+   class MySimulatorClass(TangoSimuMod.SimulatorClass):
+       """Derive the tango device class in order to describe extra attributes/properties/commands"""
+
+   # Plugin
+
+   def get_control(**kwargs):
+       return TangoSimuMod.get_control(
+           _Camera=MyCamera,
+           _Simulator=MySimulator,
+           **kwargs)
+
+   def get_tango_specific_class_n_device():
+       return MySimulatorClass, MySimulator
+
+Tango LimaCCDs runner
+'''''''''''''''''''''
+
+This is needed if your camera module is not already part of the
+`Lima.Server.camera` package.
+
+You need to use this module as a program entry point to have a custom `MyLimaCCDs`
+program.
+
+.. code-block:: python
+
+   # module myproject.MyLimaCCDs.py
+
+   def register_lima_camera(camera_module):
+       """
+       Register a python module as a Tango Lima camera.
+
+       The module have to expose a `get_tango_specific_class_n_device`
+       method returning the Tango device and deviceclass classes.
+
+       Argument:
+           camera_module: A python module containing the Tango Lima device classes
+       """
+       _tangoclassclass, tangoclass = camera_module.get_tango_specific_class_n_device()
+       name = tangoclass.__name__
+       sys.modules[f"Lima.Server.camera.{name}"] = camera_module
+       from Lima.Server import camera
+       camera.__all__.append(name)
+
+    from myproject import MySimulator
+    register_lima_camera(MySimulator)
+    from Lima.Server import LimaCCDs
+    return LimaCCDs.main()
+
+Database description
+''''''''''''''''''''
+
+This is a representation of the Tango database content.
+
+.. code-block:: yaml
+
+   personal_name: my_simulator
+   server: LimaCCDs
+   device:
+   - class: MySimulator
+     tango_name: id00/mysimulator/my_simulator
+     properties:
+       mode: GENERATOR_PREFETCH
+       nb_prefetched_frames: 1  # Alloc a single frame in memory
+       fill_type: EMPTY  # let python filling the full frame
+   - class: LimaCCDs
+     properties:
+       LimaCameraType: MySimulator  # ask to use your custom camera
+
+Start the tango device
+''''''''''''''''''''''
+
+.. code-block:: sh
+
+   MyLimaCCDs my_simulator
