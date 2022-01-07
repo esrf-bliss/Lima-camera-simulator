@@ -54,7 +54,7 @@ Custom LimaCCDs camera simulator
 A custom camera simulator can be created following this recipe.
 
 - Create a custom tango camera simulator
-- Create a dedicated LimaCCDs runner
+- Register this new module as a Lima camera entry point
 - Set/update the tango database
 
 Tango camera simulator
@@ -91,39 +91,27 @@ Tango camera simulator
    def get_tango_specific_class_n_device():
        return MySimulatorClass, MySimulator
 
-Tango LimaCCDs runner
-'''''''''''''''''''''
+Lima camera entry point
+'''''''''''''''''''''''
 
-This is needed if your camera module is not already part of the
-`Lima.Server.camera` package.
+Lima provides entry points for plugins and cameras.
 
-You need to use this module as a program entry point to have a custom `MyLimaCCDs`
-program.
+This can be used to register our new camera.
+
+This allows `LimaCCDs` launcher to found your camera from your project.
 
 .. code-block:: python
 
-   # module myproject.MyLimaCCDs.py
+   # setup.py
 
-   def register_lima_camera(camera_module):
-       """
-       Register a python module as a Tango Lima camera.
-
-       The module have to expose a `get_tango_specific_class_n_device`
-       method returning the Tango device and deviceclass classes.
-
-       Argument:
-           camera_module: A python module containing the Tango Lima device classes
-       """
-       _tangoclassclass, tangoclass = camera_module.get_tango_specific_class_n_device()
-       name = tangoclass.__name__
-       sys.modules[f"Lima.Server.camera.{name}"] = camera_module
-       from Lima.Server import camera
-       camera.__all__.append(name)
-
-    from myproject import MySimulator
-    register_lima_camera(MySimulator)
-    from Lima.Server import LimaCCDs
-    return LimaCCDs.main()
+   setup(
+      name=__name__,
+      version=__version__,
+      ...
+      entry_points={
+          "Lima_tango_camera": ["MySimulator = myproject.MySimulator"],
+      },
+   )
 
 Database description
 ''''''''''''''''''''
@@ -139,15 +127,15 @@ This is a representation of the Tango database content.
      tango_name: id00/mysimulator/my_simulator
      properties:
        mode: GENERATOR_PREFETCH
-       nb_prefetched_frames: 1  # Alloc a single frame in memory
-       fill_type: EMPTY  # let python filling the full frame
+       nb_prefetched_frames: 1      # Alloc a single frame in memory
+       fill_type: EMPTY             # Let python filling the full frame
    - class: LimaCCDs
      properties:
-       LimaCameraType: MySimulator  # ask to use your custom camera
+       LimaCameraType: MySimulator  # Ask to use your custom camera
 
 Start the tango device
 ''''''''''''''''''''''
 
 .. code-block:: sh
 
-   MyLimaCCDs my_simulator
+   LimaCCDs my_simulator
