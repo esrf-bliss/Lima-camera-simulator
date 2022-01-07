@@ -108,7 +108,7 @@ class Simulator(PyTango.Device_4Impl):
 
         if self.pixel_size:
             pixel_size = self.pixel_size
-            _SimuCamera.setPixelSize(pixel_size[0], pixel_size[1])
+            self._SimuCamera.setPixelSize(pixel_size[0], pixel_size[1])
 
         if self.peaks:
             peaks = self.peaks
