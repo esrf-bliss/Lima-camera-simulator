@@ -6,7 +6,7 @@ stages:
 .build-cpp:
   stage: build
   script:
-    - conda build ./conda/camera --output-folder=dist --channel=http://bcu-ci.esrf.fr/stable
+    - conda mambabuild ./conda/camera --output-folder=dist --channel=http://bcu-ci.esrf.fr/stable
   artifacts:
     paths:
       - dist
