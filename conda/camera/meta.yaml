@@ -16,6 +16,7 @@ requirements:
     - sip 4.19* # API v12.7
     - lima-core
   build:
+    - ninja
     - cmake
     - {{ compiler('cxx') }}
   run:
