@@ -98,7 +98,7 @@ class CheckControl:
 		image = self.ct_control.ReadImage(last_img_ready)
 		time.sleep(self.sleep_time)
 		deb.Always('Forcing read frame %d memory' % last_img_ready)
-		data = b' ' + image.buffer.tostring()
+		data = b' ' + image.buffer.tobytes()
 
 
 class CheckControlAutoSync:
