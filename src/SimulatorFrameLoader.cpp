@@ -34,13 +34,13 @@
 #include <utility>
 #include <map>
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #include <windows.h>
 #include <shlwapi.h>
 #pragma comment(lib, "shlwapi.lib") // This tells msvc to link with shlwapi.lib
 #else
 #include <glob.h>
-#endif // (WIN32)
+#endif // (_WIN32)
 
 //#include <processlib/Data.h>
 
@@ -140,7 +140,7 @@ static void findFiles(const std::string &path_pattern, std::vector<std::string> 
   
   if (path_pattern.empty()) return;
 
-#if defined(WIN32)
+#if defined(_WIN32)
   // Extract the folder part
   std::string folder = path_pattern;
   folder.push_back('\0');
@@ -171,7 +171,7 @@ static void findFiles(const std::string &path_pattern, std::vector<std::string> 
     files.push_back(std::string(glob_result.gl_pathv[i]));
 
   globfree(&glob_result);
-#endif // WIN32
+#endif // _WIN32
 }
 
 void FrameLoader::setFilePattern(const std::string &file_pattern)
@@ -192,7 +192,7 @@ void FrameLoader::setFilePattern(const std::string &file_pattern)
     const std::string &file = m_files.front();
 
     // Get the file path and extension
-#if defined(WIN32)
+#if defined(_WIN32)
     // std::string path(MAX_PATH, '\0');
     // PathCombine(&path[0], m_folder.c_str(), file.c_str());
     const std::string extension(PathFindExtension(file.c_str()));
@@ -200,7 +200,7 @@ void FrameLoader::setFilePattern(const std::string &file_pattern)
     // std::string path = folder + "/" + file;
     const size_t pos            = file.rfind('.');
     const std::string extension = pos == 0 ? std::string() : file.substr(pos);
-#endif // WIN32
+#endif // _WIN32
 
     Size size;
     ImageType image_type;
@@ -269,7 +269,7 @@ bool FrameLoader::getFrame(unsigned long frame_nr, unsigned char *ptr)
     FrameDim frame_dim;
 
     // Get the file extension
-#if defined(WIN32)
+#if defined(_WIN32)
     // std::string path(MAX_PATH, '\0');
     // PathCombine(&path[0], m_folder.c_str(), file.c_str());
     const std::string extension(PathFindExtension(file.c_str()));
@@ -277,7 +277,7 @@ bool FrameLoader::getFrame(unsigned long frame_nr, unsigned char *ptr)
     // std::string path = m_folder + "/" + file;
     const size_t pos            = file.rfind('.');
     const std::string extension = pos == 0 ? std::string() : file.substr(pos);
-#endif // WIN32
+#endif // _WIN32
 
     if (extension == ".edf") {
       if (m_current_stream->peek() == EOF) {
