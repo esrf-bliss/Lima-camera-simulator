@@ -73,6 +73,9 @@ def test_internal_trigger_multi():
     for _ in range(3):
         time.sleep(0.1)
         ct.startAcq()
+        # Make sure the detector is ready for next image
+        while hw.getStatus().acq != Core.AcqReady:
+            time.sleep(0.1)
 
     while ct.getStatus().AcquisitionStatus != Core.AcqReady:
         time.sleep(0.1)
@@ -119,6 +122,9 @@ def test_external_trigger_multi():
     for _ in range(3):
         cam.extTrigAcq()  # simulate an external trigger
         time.sleep(0.1)
+        # Make sure the detector is ready for next image
+        while hw.getStatus().acq != Core.AcqReady:
+            time.sleep(0.1)
 
     while ct.getStatus().AcquisitionStatus != Core.AcqReady:
         time.sleep(0.1)
