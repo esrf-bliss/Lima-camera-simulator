@@ -208,6 +208,16 @@ def test_custom_pixel_size():
     assert pixelsize == (1e-3, 1e-4)
 
 
+def wait_for_acqend(ct):
+    t = time.process_time()
+    for _ in range(100):
+        if ct.getStatus().AcquisitionStatus != Core.AcqRunning:
+            break
+        time.sleep(0.1)
+    else:
+        elapsed_time = time.process_time() - t
+        assert False, f"Simulator is still running after {elapsed_time}"
+
 def test_custom_frame():
 
     process_count = 0
@@ -230,12 +240,7 @@ def test_custom_frame():
     ct.prepareAcq()
     ct.startAcq()
 
-    for _ in range(20):
-        if ct.getStatus().AcquisitionStatus != Core.AcqRunning:
-            break
-        time.sleep(0.1)
-    else:
-        assert False, "Simulator is still running"
+    wait_for_acqend(ct)
 
     assert process_count == 1
 
@@ -264,12 +269,7 @@ def test_gauss_fill():
     ct.prepareAcq()
     ct.startAcq()
 
-    for _ in range(30):
-        if ct.getStatus().AcquisitionStatus != Core.AcqRunning:
-            break
-        time.sleep(0.1)
-    else:
-        assert False, "Simulator is still running"
+    wait_for_acqend(ct)
 
     assert processed_frames == [1096524, 2225892, 3356544]
 
@@ -299,11 +299,6 @@ def test_empty_fill():
     ct.prepareAcq()
     ct.startAcq()
 
-    for _ in range(30):
-        if ct.getStatus().AcquisitionStatus != Core.AcqRunning:
-            break
-        time.sleep(0.1)
-    else:
-        assert False, "Simulator is still running"
+    wait_for_acqend(ct)
 
     assert processed_frames == [0, 0, 0]
