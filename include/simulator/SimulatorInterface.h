@@ -32,7 +32,6 @@
 #include <simulator/SimulatorBinCtrlObj.h>
 #include <simulator/SimulatorRoiCtrlObj.h>
 #include <simulator/SimulatorSyncCtrlObj.h>
-#include <simulator/SimulatorSyncCtrlObj.h>
 #include <simulator/SimulatorDetInfoCtrlObj.h>
 #include <simulator/SimulatorShutterCtrlObj.h>
 
