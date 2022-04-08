@@ -18,7 +18,7 @@ requirements:
     - lima-core
   run:
     - lima-tango-server
-    - lima-camera-simulator
+    - lima-camera-simulator {{ version }}
 
 test:
   source_files:
