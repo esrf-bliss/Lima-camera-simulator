@@ -22,6 +22,18 @@ from Lima import Core, Simulator
 _logger = logging.getLogger(__name__)
 
 
+def wait_for(predicate, timeout = 10):
+    """ Utility to wait for a given predicate until timeout """
+    t = time.process_time()
+    for _ in range(timeout):
+        if predicate():
+            break
+        time.sleep(0.1)
+    else:
+        elapsed_time = time.process_time() - t
+        assert False, f"Simulator is still running after {elapsed_time}"
+
+
 class AcquisitionStatusFromImageStatusCallback(Core.CtControl.ImageStatusCallback):
     def __init__(self):
         super().__init__()
@@ -38,7 +50,6 @@ class AcquisitionStatusFromImageStatusCallback(Core.CtControl.ImageStatusCallbac
         self.last_image_saved = image_status.LastImageSaved
         self.last_counter_ready = image_status.LastCounterReady
 
-
 def test_internal_trigger():
     cam = Simulator.Camera()
     hw = Simulator.Interface(cam)
@@ -53,6 +64,8 @@ def test_internal_trigger():
     while ct.getStatus().AcquisitionStatus != Core.AcqReady:
         time.sleep(0.1)
 
+    # Counter status are updated asynchronously (in another thread)
+    wait_for(lambda : acq_status.last_image_ready == 0)
     assert acq_status.last_image_ready == 0
 
 
@@ -80,6 +93,8 @@ def test_internal_trigger_multi():
     while ct.getStatus().AcquisitionStatus != Core.AcqReady:
         time.sleep(0.1)
 
+    # Counter status are updated asynchronously (in another thread)
+    wait_for(lambda : acq_status.last_image_ready == 2)
     assert acq_status.last_image_ready == 2
 
 
@@ -102,6 +117,8 @@ def test_external_trigger_single():
     while ct.getStatus().AcquisitionStatus != Core.AcqReady:
         time.sleep(0.1)
 
+    # Counter status are updated asynchronously (in another thread)
+    wait_for(lambda : acq_status.last_image_ready == 2)
     assert acq_status.last_image_ready == 2
 
 
@@ -129,6 +146,8 @@ def test_external_trigger_multi():
     while ct.getStatus().AcquisitionStatus != Core.AcqReady:
         time.sleep(0.1)
 
+    # Counter status are updated asynchronously (in another thread)
+    wait_for(lambda : acq_status.last_image_ready == 2)
     assert acq_status.last_image_ready == 2
 
 
@@ -207,17 +226,6 @@ def test_custom_pixel_size():
     pixelsize = detInfo.getPixelSize()
     assert pixelsize == (1e-3, 1e-4)
 
-
-def wait_for_acqend(ct):
-    t = time.process_time()
-    for _ in range(100):
-        if ct.getStatus().AcquisitionStatus != Core.AcqRunning:
-            break
-        time.sleep(0.1)
-    else:
-        elapsed_time = time.process_time() - t
-        assert False, f"Simulator is still running after {elapsed_time}"
-
 def test_custom_frame():
 
     process_count = 0
@@ -240,8 +248,7 @@ def test_custom_frame():
     ct.prepareAcq()
     ct.startAcq()
 
-    wait_for_acqend(ct)
-
+    wait_for(lambda: ct.getStatus().AcquisitionStatus != Core.AcqRunning, 100)
     assert process_count == 1
 
 
@@ -269,8 +276,7 @@ def test_gauss_fill():
     ct.prepareAcq()
     ct.startAcq()
 
-    wait_for_acqend(ct)
-
+    wait_for(lambda: ct.getStatus().AcquisitionStatus != Core.AcqRunning, 100)
     assert processed_frames == [1096524, 2225892, 3356544]
 
 
@@ -299,6 +305,5 @@ def test_empty_fill():
     ct.prepareAcq()
     ct.startAcq()
 
-    wait_for_acqend(ct)
-
+    wait_for(lambda: ct.getStatus().AcquisitionStatus != Core.AcqRunning, 100)
     assert processed_frames == [0, 0, 0]
