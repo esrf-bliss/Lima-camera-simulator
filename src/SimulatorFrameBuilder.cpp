@@ -28,10 +28,11 @@
 #include <vector>
 #ifdef __unix
 #include <sys/time.h>
-#else
-#include <time_compat.h>
-#endif
 #include <unistd.h>
+#else
+#include <processlib/win/time_compat.h>
+#include <processlib/win/unistd.h>
+#endif
 #include "simulator/SimulatorFrameBuilder.h"
 #include "lima/SizeUtils.h"
 

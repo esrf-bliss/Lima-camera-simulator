@@ -20,7 +20,11 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
+#ifdef __unix
 #include <unistd.h>
+#else
+#include <processlib/win/unistd.h>
+#endif
 
 #include <lima/Debug.h>
 
