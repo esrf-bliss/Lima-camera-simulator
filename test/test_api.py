@@ -112,6 +112,7 @@ def test_external_trigger_single():
     acq.setAcqExpoTime(0.01)
 
     ct.prepareAcq()
+    ct.startAcq()     # arm
     cam.extTrigAcq()  # simulate an external trigger
 
     while ct.getStatus().AcquisitionStatus != Core.AcqReady:
@@ -136,6 +137,7 @@ def test_external_trigger_multi():
     acq.setAcqExpoTime(0.01)
 
     ct.prepareAcq()
+    ct.startAcq()         # arm
     for _ in range(3):
         cam.extTrigAcq()  # simulate an external trigger
         time.sleep(0.1)
