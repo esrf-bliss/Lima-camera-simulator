@@ -129,8 +129,6 @@ void FrameBuilder::checkValid(const FrameDim &frame_dim, const Bin &bin, const R
   Size size = frame_dim.getSize();
   if (size.isEmpty())
     throw LIMA_HW_EXC(InvalidValue, "Invalid empty frame size");
-  if ((size.getWidth() % 2 != 0) || (size.getHeight() % 2 != 0))
-    throw LIMA_HW_EXC(InvalidValue, "Frame size must be multiple of 2x2");
 
   Bin valid_bin = bin;
   checkBin(valid_bin);
