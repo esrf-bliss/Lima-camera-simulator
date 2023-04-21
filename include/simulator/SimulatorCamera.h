@@ -124,6 +124,7 @@ private:
       Exposure,
       Readout,
       Latency,
+      Armed,
       Fault,
     };
 
@@ -150,6 +151,7 @@ private:
     void execPrepareAcq();
     void execStartAcq();
     void execExternalTrigAcq();
+    void _exposure();
     Camera *m_simu;
   };
   friend class SimuThread;

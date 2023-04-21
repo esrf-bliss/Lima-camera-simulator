@@ -148,13 +148,41 @@ void Camera::SimuThread::execStartAcq()
 {
   DEB_MEMBER_FUNCT();
   
+  if (m_simu->m_trig_mode == ExtTrigSingle || m_simu->m_trig_mode == ExtTrigMult)
+  {
+    DEB_TRACE() << "Detector armed";
+    setStatus(Armed);
+  }
+  else
+    _exposure();
+    
+}
+
+void Camera::SimuThread::execExternalTrigAcq()
+{
+  DEB_MEMBER_FUNCT();
+
+  if (m_simu->m_trig_mode != ExtTrigSingle && m_simu->m_trig_mode != ExtTrigMult)
+  {
+    DEB_ERROR() << "Fake external trigger was invoked but the trig_mode is not configured as ExtTrig";
+    setStatus(Fault);
+  }
+  else
+    _exposure();
+}
+
+void Camera::SimuThread::_exposure()
+{
+  DEB_MEMBER_FUNCT();
+
   try {
     StdBufferCbMgr &buffer_mgr = m_simu->m_buffer_ctrl_obj.getBuffer();
     buffer_mgr.setStartTimestamp(Timestamp::now());
 
     FrameGetter *frame_getter = m_simu->m_frame_getter;
 
-    int nb_frames = (m_simu->m_trig_mode == IntTrig || m_simu->m_trig_mode == ExtTrigSingle) ? m_simu->m_nb_frames : m_acq_frame_nb + 1;
+    int nb_frames = (m_simu->m_trig_mode == IntTrig || m_simu->m_trig_mode == ExtTrigSingle) ? m_simu->m_nb_frames
+                                                                                             : m_acq_frame_nb + 1;
     int &frame_nb = m_acq_frame_nb;
     for (; (nb_frames == 0) || (frame_nb < nb_frames); frame_nb++) {
       if (getNextCmd() == StopAcq) {
@@ -176,27 +204,26 @@ void Camera::SimuThread::execStartAcq()
 
       // Get the next frame
       bool res = frame_getter->getFrame(frame_nb, ptr);
-      if (!res)
-        throw LIMA_HW_EXC(InvalidValue, "Failed to get next frame");
+      if (!res) throw LIMA_HW_EXC(InvalidValue, "Failed to get next frame");
 
       {
-          Data data;
-          Buffer buffer;
-          buffer.data = ptr;
-          buffer.owner = Buffer::MAPPED;
-          data.frameNumber = frame_nb;
-          data.type = dataTypeFromImageType(frame_dim.getImageType());
-          data.dimensions = { frame_dim.getSize().getWidth(), frame_dim.getSize().getHeight() };
-          data.setBuffer(&buffer);
-          m_simu->fillData(data);
-          data.releaseBuffer();
+        Data data;
+        Buffer buffer;
+        buffer.data      = ptr;
+        buffer.owner     = Buffer::MAPPED;
+        data.frameNumber = frame_nb;
+        data.type        = dataTypeFromImageType(frame_dim.getImageType());
+        data.dimensions  = {frame_dim.getSize().getWidth(), frame_dim.getSize().getHeight()};
+        data.setBuffer(&buffer);
+        m_simu->fillData(data);
+        data.releaseBuffer();
       }
 
       HwFrameInfoType frame_info;
       frame_info.acq_frame_nb = frame_nb;
-      
+
       DEB_TRACE() << DEB_VAR1(frame_info);
-      
+
       buffer_mgr.newFrameReady(frame_info);
 
       req_time = m_simu->m_lat_time;
@@ -210,18 +237,6 @@ void Camera::SimuThread::execStartAcq()
     DEB_ERROR() << e;
     setStatus(Fault);
   }
-}
-
-void Camera::SimuThread::execExternalTrigAcq()
-{
-  DEB_MEMBER_FUNCT();
-
-  if (m_simu->m_trig_mode != ExtTrigSingle && m_simu->m_trig_mode != ExtTrigMult) {
-    DEB_ERROR() << "Fake external trigger was invoked but the trig_mode is not configured as ExtTrig";
-    return;
-  }
-
-  execStartAcq();
 }
 
 
@@ -434,6 +449,7 @@ HwInterface::StatusType::Basic Camera::getStatus()
   switch (thread_status) {
   case SimuThread::Ready:
   case SimuThread::Prepare:
+  case SimuThread::Armed:
     return HwInterface::StatusType::Ready;
   case SimuThread::Exposure:
     return HwInterface::StatusType::Exposure;
@@ -473,8 +489,9 @@ void Camera::startAcq()
 
   int thread_status = m_thread.getStatus();
   if ((thread_status != SimuThread::Prepare) &&
-      (thread_status != SimuThread::Ready))
-    THROW_HW_ERROR(Error) << "Camera not Prepared nor Ready (Multi Trigger)";
+      (thread_status != SimuThread::Ready) &&
+      (thread_status != SimuThread::Armed))
+    THROW_HW_ERROR(Error) << "Camera not Prepared nor Armed (Multi Trigger)";
 
   m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
 
@@ -488,9 +505,9 @@ void Camera::extTrigAcq()
   DEB_MEMBER_FUNCT();
 
   int thread_status = m_thread.getStatus();
-  if ((thread_status != SimuThread::Prepare) &&
-      (thread_status != SimuThread::Ready))
-    THROW_HW_ERROR(Error) << "Camera not Prepared nor Ready (Multi Trigger)";
+  if ((thread_status != SimuThread::Ready) &&
+      (thread_status != SimuThread::Armed))
+    THROW_HW_ERROR(Error) << "Camera not Ready nor Armed (Multi Trigger)";
 
   m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
 
@@ -507,12 +524,13 @@ void Camera::stopAcq()
   case SimuThread::Exposure:
   case SimuThread::Readout:
   case SimuThread::Latency:
+  case SimuThread::Armed:
     m_thread.sendCmd(SimuThread::StopAcq);
     m_thread.waitStatus(SimuThread::Ready);
     break;
 
   case SimuThread::Fault:
-    THROW_HW_ERROR(Error) << "Camera not in Fault status";
+    THROW_HW_ERROR(Error) << "Camera in Fault state";
   }
 }
 
