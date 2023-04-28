@@ -224,13 +224,17 @@ void Camera::SimuThread::_exposure()
 
       DEB_TRACE() << DEB_VAR1(frame_info);
 
-      buffer_mgr.newFrameReady(frame_info);
-
       req_time = m_simu->m_lat_time;
       if (req_time > 1e-6) {
         setStatus(Latency);
         usleep(long(req_time * 1e6));
       }
+
+      if (m_simu->m_trig_mode == IntTrigMult)
+        // Make sure the detector is ready before calling newFrameReady
+        setStatus(Ready);
+
+      buffer_mgr.newFrameReady(frame_info);
     }
     setStatus(Ready);
   } catch (Exception &e) {
