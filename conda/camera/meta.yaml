@@ -14,7 +14,7 @@ requirements:
   host:
     - python {{ python }}
     - sip 4.19* # API v12.7
-    - lima-core
+    - lima-core 1.9.21*
   build:
     - ninja
     - cmake
