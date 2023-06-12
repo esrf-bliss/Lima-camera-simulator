@@ -49,10 +49,6 @@ deploy-devel:
   tags:
     - conda
     - linux
-  only:
-    - branches
-  except:
-    - master
   when: manual
 
 deploy-stable:
@@ -70,5 +66,4 @@ deploy-stable:
   tags:
     - conda
     - linux
-  only:
-    - tags
+  when: manual
