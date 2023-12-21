@@ -169,7 +169,7 @@ if(LIMA_ENABLE_PYTHON)
 endif()
 
 ## Tests
-if(CAMERA_ENABLE_TESTS)
-    enable_testing()
-    add_subdirectory(test)
+if(LIMA_ENABLE_CAMERA_TESTS)
+  enable_testing()
+  add_subdirectory(test)
 endif()
