@@ -75,7 +75,7 @@ TestApp::Pars::Pars()
 	m_opt_list.insert(MakeOpt(var, "", opt, par))
 
 	AddOpt(cam_mode, "--cam-mode",
-	       "mode: MODE_[GENERATOR|LOADER][_PREFETCH]");
+	       "mode: [GENERATOR|LOADER][_PREFETCH]");
 
 	AddOpt(cam_frame_dim, "--cam-frame-dim",
 	       "generator frame dim: WxHxD-T, D=1|2|4, T=Bpp8|16|32");
