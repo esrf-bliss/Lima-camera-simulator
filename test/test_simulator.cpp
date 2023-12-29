@@ -101,17 +101,25 @@ CtControl *TestApp::getCtControl()
 
 	DEB_ALWAYS() << "Camera: " << DEB_VAR1(m_pars->cam_mode);
 	m_cam->setMode(m_pars->cam_mode);
-	if ((m_pars->cam_mode == MODE_GENERATOR_PREFETCH) ||
-	    (m_pars->cam_mode == MODE_LOADER_PREFETCH)) {
+	if (m_pars->cam_mode == MODE_GENERATOR_PREFETCH) {
+		FramePrefetcher<FrameBuilder> *fbp;
+		fbp = m_cam->getFrameBuilderPrefetched();
+		assert(fbp != NULL);
 		DEB_ALWAYS() << DEB_VAR1(m_pars->cam_nb_prefetched_frames);
-		FramePrefetcher<FrameBuilder> *fbp= m_cam->getFrameBuilderPrefetched();
 		fbp->setNbPrefetchedFrames(m_pars->cam_nb_prefetched_frames);
-	}
-	if ((m_pars->cam_mode == MODE_LOADER) ||
-	    (m_pars->cam_mode == MODE_LOADER_PREFETCH)) {
+	} else if (m_pars->cam_mode == MODE_LOADER) {
+		FrameLoader *fl = m_cam->getFrameLoader();
+		assert(fl != NULL);
 		DEB_ALWAYS() << DEB_VAR1(m_pars->cam_file_pattern);
-		FrameLoader *fl= m_cam->getFrameLoader();
 		fl->setFilePattern(m_pars->cam_file_pattern);
+	} else if (m_pars->cam_mode == MODE_LOADER_PREFETCH) {
+		FramePrefetcher<FrameLoader> *flp;
+		flp = m_cam->getFrameLoaderPrefetched();
+		assert(flp != NULL);
+		DEB_ALWAYS() << DEB_VAR1(m_pars->cam_file_pattern);
+		flp->setFilePattern(m_pars->cam_file_pattern);
+		DEB_ALWAYS() << DEB_VAR1(m_pars->cam_nb_prefetched_frames);
+		flp->setNbPrefetchedFrames(m_pars->cam_nb_prefetched_frames);
 	}
 
 	if (m_pars->cam_frame_dim.isValid())
