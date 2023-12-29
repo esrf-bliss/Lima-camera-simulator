@@ -228,7 +228,8 @@ void FrameLoader::setFilePattern(const std::string &file_pattern)
         image_type = getImageType(val->second);
       else
         throw LIMA_EXC(CameraPlugin, Error, "Missing DataType header in EDF file");
-    }
+    } else
+      throw LIMA_EXC(CameraPlugin, NotSupported, "Unsupported file format");
 
     m_frame_dim = FrameDim(size, image_type);
 
@@ -342,7 +343,7 @@ bool FrameLoader::getFrame(unsigned long frame_nr, unsigned char *ptr)
       os << std::hex << data[0] << ' ' << data[1] << ' '<< data[2] << ' '<< data[3];
       DEB_TRACE() << "data: " << os.str();
     } else
-      throw LIMA_EXC(CameraPlugin, Error, "Unsupported file format");
+      throw LIMA_EXC(CameraPlugin, NotSupported, "Unsupported file format");
 
   } else
     return false;
