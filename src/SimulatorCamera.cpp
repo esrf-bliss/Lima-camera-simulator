@@ -208,9 +208,8 @@ void Camera::SimuThread::_exposure()
 
       {
         Data data;
-        Buffer buffer;
-        buffer.data      = ptr;
-        buffer.owner     = Buffer::MAPPED;
+	std::function<void(void *)> empty_deleter;
+        MappedBuffer buffer(ptr, empty_deleter);
         data.frameNumber = frame_nb;
         data.type        = dataTypeFromImageType(frame_dim.getImageType());
         data.dimensions  = {frame_dim.getSize().getWidth(), frame_dim.getSize().getHeight()};
