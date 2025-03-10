@@ -494,7 +494,7 @@ void Camera::startAcq()
   if ((thread_status != SimuThread::Prepare) &&
       (thread_status != SimuThread::Ready) &&
       (thread_status != SimuThread::Armed))
-    THROW_HW_ERROR(Error) << "Camera not Prepared nor Armed (Multi Trigger)";
+    THROW_HW_ERROR(Error) << "Camera not Prepared nor Ready nor Armed (state: " << thread_status << ")";
 
   m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
 
@@ -510,7 +510,7 @@ void Camera::extTrigAcq()
   int thread_status = m_thread.getStatus();
   if ((thread_status != SimuThread::Ready) &&
       (thread_status != SimuThread::Armed))
-    THROW_HW_ERROR(Error) << "Camera not Ready nor Armed (Multi Trigger)";
+    THROW_HW_ERROR(Error) << "Camera not Ready nor Armed (state: " << thread_status << ")";
 
   m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
 
