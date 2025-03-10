@@ -50,6 +50,7 @@ class AcquisitionStatusFromImageStatusCallback(Core.CtControl.ImageStatusCallbac
         self.last_image_saved = image_status.LastImageSaved
         self.last_counter_ready = image_status.LastCounterReady
 
+
 def test_internal_trigger():
     cam = Simulator.Camera()
     hw = Simulator.Interface(cam)
@@ -227,6 +228,7 @@ def test_custom_pixel_size():
     detInfo = hw.getHwCtrlObj(Core.HwCap.DetInfo)
     pixelsize = detInfo.getPixelSize()
     assert pixelsize == (1e-3, 1e-4)
+
 
 def test_custom_frame():
 
