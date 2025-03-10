@@ -22,7 +22,7 @@ from Lima import Core, Simulator
 _logger = logging.getLogger(__name__)
 
 
-def wait_for(predicate, timeout = 10):
+def wait_for(predicate, timeout=10):
     """ Utility to wait for a given predicate until timeout """
     t = time.process_time()
     for _ in range(timeout):
@@ -65,7 +65,7 @@ def test_internal_trigger():
         time.sleep(0.1)
 
     # Counter status are updated asynchronously (in another thread)
-    wait_for(lambda : acq_status.last_image_ready == 0)
+    wait_for(lambda: acq_status.last_image_ready == 0)
     assert acq_status.last_image_ready == 0
 
 
@@ -94,7 +94,7 @@ def test_internal_trigger_multi():
         time.sleep(0.1)
 
     # Counter status are updated asynchronously (in another thread)
-    wait_for(lambda : acq_status.last_image_ready == 2)
+    wait_for(lambda: acq_status.last_image_ready == 2)
     assert acq_status.last_image_ready == 2
 
 
@@ -119,7 +119,7 @@ def test_external_trigger_single():
         time.sleep(0.1)
 
     # Counter status are updated asynchronously (in another thread)
-    wait_for(lambda : acq_status.last_image_ready == 2)
+    wait_for(lambda: acq_status.last_image_ready == 2)
     assert acq_status.last_image_ready == 2
 
 
@@ -149,7 +149,7 @@ def test_external_trigger_multi():
         time.sleep(0.1)
 
     # Counter status are updated asynchronously (in another thread)
-    wait_for(lambda : acq_status.last_image_ready == 2)
+    wait_for(lambda: acq_status.last_image_ready == 2)
     assert acq_status.last_image_ready == 2
 
 
