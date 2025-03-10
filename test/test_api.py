@@ -256,6 +256,56 @@ def test_custom_frame():
     assert process_count == 1
 
 
+def test_custom_frame_exception():
+    """
+    Setup a simulated camera which raise an exception at the second frame.
+
+    Expect it to stop the acquisition.
+    """
+
+    process_count = 0
+
+    class MyCamera(Simulator.Camera):
+        def fillData(self, data):
+            nonlocal process_count
+
+            process_count += 1
+            if process_count > 1:
+                raise RuntimeError("Oups")
+
+    cam = MyCamera()
+    hw = Simulator.Interface(cam)
+    ct = Core.CtControl(hw)
+
+    acq = ct.acquisition()
+    acq.setTriggerMode(Core.IntTrigMult)
+    acq.setAcqNbFrames(3)
+    acq.setAcqExpoTime(0.01)
+
+    ct.prepareAcq()
+    imageStatus = ct.getImageStatus()
+    assert imageStatus.LastImageReady == -1, imageStatus
+
+    def wait_for_next_frame_ready():
+        def check_next_frame_ready():
+            status = hw.getStatus()
+            ready = status.det == Core.DetIdle or status.det & Core.DetWaitForTrigger
+            return bool(ready)
+        wait_for(check_next_frame_ready, 100)
+
+    # The first frame is properly acquired
+    ct.startAcq()
+    wait_for_next_frame_ready()
+    imageStatus = ct.getImageStatus()
+    assert imageStatus.LastImageReady == 0, imageStatus
+
+    # The second frame trigges an internal error
+    ct.startAcq()
+    wait_for(lambda: ct.getStatus().AcquisitionStatus == Core.AcqFault, 100)
+    imageStatus = ct.getImageStatus()
+    assert imageStatus.LastImageReady == 0, imageStatus
+
+
 def test_gauss_fill():
     """
     Test that the gauss fill increase frame after frame
