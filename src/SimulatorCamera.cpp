@@ -214,7 +214,12 @@ void Camera::SimuThread::_exposure()
         data.type        = dataTypeFromImageType(frame_dim.getImageType());
         data.dimensions  = {frame_dim.getSize().getWidth(), frame_dim.getSize().getHeight()};
         data.setBuffer(&buffer);
-        m_simu->fillData(data);
+        try {
+          m_simu->fillData(data);
+        } catch (...) {
+          data.releaseBuffer();
+          throw;
+        }
         data.releaseBuffer();
       }
 
