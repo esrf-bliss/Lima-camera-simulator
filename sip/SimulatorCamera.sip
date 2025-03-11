@@ -20,6 +20,27 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
+%VirtualErrorHandler LimaVirtualErrorHandler
+    using namespace lima;
+
+    // Get the Python exception
+    PyObject *exception, *value, *traceback;
+    PyErr_Fetch(&exception, &value, &traceback);
+
+    // Convert it to str
+    PyObject* pyStr = PyObject_Str(value);
+    PyObject* pyUtf8 = PyUnicode_AsEncodedString(pyStr, "utf-8", "strict");
+    const char* cppStr = PyBytes_AsString(pyUtf8);
+    Py_DECREF(pyStr);
+    Py_DECREF(pyUtf8);
+
+    SIP_RELEASE_GIL(sipGILState);
+
+    // FIXME: There is probably a small memory leak related to cppStr
+
+    throw LIMA_EXC(Hardware, Error, cppStr);
+%End
+
 namespace Simulator
 {
 class Camera
@@ -97,7 +118,7 @@ public:
 
 	void reset();
 
-	virtual void fillData(Data&);
+	virtual void fillData(Data&) /VirtualErrorHandler=LimaVirtualErrorHandler/;
 
 	SIP_PYOBJECT __repr__() const;
 %MethodCode

@@ -22,7 +22,7 @@ from Lima import Core, Simulator
 _logger = logging.getLogger(__name__)
 
 
-def wait_for(predicate, timeout = 10):
+def wait_for(predicate, timeout=10):
     """ Utility to wait for a given predicate until timeout """
     t = time.process_time()
     for _ in range(timeout):
@@ -50,6 +50,7 @@ class AcquisitionStatusFromImageStatusCallback(Core.CtControl.ImageStatusCallbac
         self.last_image_saved = image_status.LastImageSaved
         self.last_counter_ready = image_status.LastCounterReady
 
+
 def test_internal_trigger():
     cam = Simulator.Camera()
     hw = Simulator.Interface(cam)
@@ -65,7 +66,7 @@ def test_internal_trigger():
         time.sleep(0.1)
 
     # Counter status are updated asynchronously (in another thread)
-    wait_for(lambda : acq_status.last_image_ready == 0)
+    wait_for(lambda: acq_status.last_image_ready == 0)
     assert acq_status.last_image_ready == 0
 
 
@@ -94,7 +95,7 @@ def test_internal_trigger_multi():
         time.sleep(0.1)
 
     # Counter status are updated asynchronously (in another thread)
-    wait_for(lambda : acq_status.last_image_ready == 2)
+    wait_for(lambda: acq_status.last_image_ready == 2)
     assert acq_status.last_image_ready == 2
 
 
@@ -119,7 +120,7 @@ def test_external_trigger_single():
         time.sleep(0.1)
 
     # Counter status are updated asynchronously (in another thread)
-    wait_for(lambda : acq_status.last_image_ready == 2)
+    wait_for(lambda: acq_status.last_image_ready == 2)
     assert acq_status.last_image_ready == 2
 
 
@@ -149,7 +150,7 @@ def test_external_trigger_multi():
         time.sleep(0.1)
 
     # Counter status are updated asynchronously (in another thread)
-    wait_for(lambda : acq_status.last_image_ready == 2)
+    wait_for(lambda: acq_status.last_image_ready == 2)
     assert acq_status.last_image_ready == 2
 
 
@@ -228,6 +229,7 @@ def test_custom_pixel_size():
     pixelsize = detInfo.getPixelSize()
     assert pixelsize == (1e-3, 1e-4)
 
+
 def test_custom_frame():
 
     process_count = 0
@@ -252,6 +254,56 @@ def test_custom_frame():
 
     wait_for(lambda: ct.getStatus().AcquisitionStatus != Core.AcqRunning, 100)
     assert process_count == 1
+
+
+def test_custom_frame_exception():
+    """
+    Setup a simulated camera which raise an exception at the second frame.
+
+    Expect it to stop the acquisition.
+    """
+
+    process_count = 0
+
+    class MyCamera(Simulator.Camera):
+        def fillData(self, data):
+            nonlocal process_count
+
+            process_count += 1
+            if process_count > 1:
+                raise RuntimeError("Oups")
+
+    cam = MyCamera()
+    hw = Simulator.Interface(cam)
+    ct = Core.CtControl(hw)
+
+    acq = ct.acquisition()
+    acq.setTriggerMode(Core.IntTrigMult)
+    acq.setAcqNbFrames(3)
+    acq.setAcqExpoTime(0.01)
+
+    ct.prepareAcq()
+    imageStatus = ct.getImageStatus()
+    assert imageStatus.LastImageReady == -1, imageStatus
+
+    def wait_for_next_frame_ready():
+        def check_next_frame_ready():
+            status = hw.getStatus()
+            ready = status.det == Core.DetIdle or status.det & Core.DetWaitForTrigger
+            return bool(ready)
+        wait_for(check_next_frame_ready, 100)
+
+    # The first frame is properly acquired
+    ct.startAcq()
+    wait_for_next_frame_ready()
+    imageStatus = ct.getImageStatus()
+    assert imageStatus.LastImageReady == 0, imageStatus
+
+    # The second frame trigges an internal error
+    ct.startAcq()
+    wait_for(lambda: ct.getStatus().AcquisitionStatus == Core.AcqFault, 100)
+    imageStatus = ct.getImageStatus()
+    assert imageStatus.LastImageReady == 0, imageStatus
 
 
 def test_gauss_fill():
