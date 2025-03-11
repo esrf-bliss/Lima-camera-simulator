@@ -32,13 +32,14 @@
     PyObject* pyUtf8 = PyUnicode_AsEncodedString(pyStr, "utf-8", "strict");
     const char* cppStr = PyBytes_AsString(pyUtf8);
     Py_DECREF(pyStr);
-    Py_DECREF(pyUtf8);
 
-    SIP_RELEASE_GIL(sipGILState);
-
-    // FIXME: There is probably a small memory leak related to cppStr
-
-    throw LIMA_EXC(Hardware, Error, cppStr);
+    try {
+        throw LIMA_EXC(Hardware, Error, cppStr);
+    } catch (...) {
+        Py_DECREF(pyUtf8);
+        SIP_RELEASE_GIL(sipGILState);
+        throw;
+    }
 %End
 
 namespace Simulator
