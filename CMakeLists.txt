@@ -161,8 +161,8 @@ install(
 if(LIMA_ENABLE_PYTHON)
   install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python/
-    DESTINATION "${PYTHON_SITE_PACKAGES_DIR}/Lima/Simulator"
-    )
+    DESTINATION "$<PATH:CMAKE_PATH,NORMALIZE,${Python3_SITEARCH}/Lima/Simulator>"
+  )
   if (LIMA_ENABLE_PYTANGO_SERVER)
     add_subdirectory(tango)
   endif()
