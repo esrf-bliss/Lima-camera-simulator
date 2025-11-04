@@ -20,12 +20,15 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //###########################################################################
 
+#include <cstdlib>
+
 #include "simulator/SimulatorInterface.h"
 #include "simulator/SimulatorFrameGetter.h"
 #include "simulator/SimulatorFrameLoader.h"
 #include "simulator/SimulatorFrameBuilder.h"
 #include "simulator/SimulatorFramePrefetcher.h"
 #include "lima/CtTestApp.h"
+#include "processlib/PoolThreadMgr.h"
 
 DEB_GLOBAL(DebModTest);
 
@@ -144,6 +147,7 @@ void TestApp::configureAcq(const index_map& indexes)
 int main(int argc, char *argv[])
 {
 	DEB_GLOBAL_FUNCT();
+	std::atexit(PoolThreadMgr::cleanup);
         try {
 		TestApp app(argc, argv);
 		app.run();
