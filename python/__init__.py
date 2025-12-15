@@ -20,5 +20,5 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 from Lima import Core
-from limasimulator import Simulator as _S
+from lima.limasimulator import Simulator as _S
 globals().update(_S.__dict__)

@@ -1,7 +1,7 @@
 ############################################################################
 # This file is part of LImA, a Library for Image Acquisition
 #
-# Copyright (C) : 2009-2011
+# Copyright (C) : 2009-2026
 # European Synchrotron Radiation Facility
 # BP 220, Grenoble 38043
 # FRANCE
@@ -31,6 +31,7 @@ from Lima.Server import AttrHelper
 from Lima import Core
 from Lima import Simulator as SimuMod
 
+
 def grouper(n, iterable, padvalue=None):
     return zip(*[itertools.chain(iterable, itertools.repeat(padvalue, n - 1))] * n)
 
@@ -46,26 +47,26 @@ class Simulator(PyTango.Device_4Impl):
     """Reference to Lima simulator interface binding"""
 
     _Mode = {
-        'GENERATOR': SimuMod.Camera.MODE_GENERATOR,
-        'GENERATOR_PREFETCH': SimuMod.Camera.MODE_GENERATOR_PREFETCH,
-        'LOADER': SimuMod.Camera.MODE_LOADER,
-        'LOADER_PREFETCH': SimuMod.Camera.MODE_LOADER_PREFETCH,
-	}
+        "GENERATOR": SimuMod.Camera.Mode.MODE_GENERATOR,
+        "GENERATOR_PREFETCH": SimuMod.Camera.Mode.MODE_GENERATOR_PREFETCH,
+        "LOADER": SimuMod.Camera.Mode.MODE_LOADER,
+        "LOADER_PREFETCH": SimuMod.Camera.Mode.MODE_LOADER_PREFETCH,
+    }
 
     _invMode = {v: k for k, v in _Mode.items()}
 
     _RotationAxis = {
-        'ROTATIONX': SimuMod.FrameBuilder.RotationX,
-        'ROTATIONY': SimuMod.FrameBuilder.RotationY,
-	}
+        "ROTATIONX": SimuMod.FrameBuilder.RotationAxis.RotationX,
+        "ROTATIONY": SimuMod.FrameBuilder.RotationAxis.RotationY,
+    }
 
     _FillType = {
-        'GAUSS':       SimuMod.FrameBuilder.Gauss,
-        'DIFFRACTION': SimuMod.FrameBuilder.Diffraction,
-        'EMPTY':       SimuMod.FrameBuilder.Empty,
-	}
+        "GAUSS": SimuMod.FrameBuilder.FillType.Gauss,
+        "DIFFRACTION": SimuMod.FrameBuilder.FillType.Diffraction,
+        "EMPTY": SimuMod.FrameBuilder.FillType.Empty,
+    }
 
-    Core.DEB_CLASS(Core.DebModApplication, 'LimaSimulator')
+    Core.DEB_CLASS(Core.DebModule.DebModApplication, "LimaSimulator")
 
     # ------------------------------------------------------------------
     #    Device constructor
@@ -99,8 +100,10 @@ class Simulator(PyTango.Device_4Impl):
         if self.mode and (Simulator._Mode.get(self.mode) != None):
             self._SimuCamera.setMode(Simulator._Mode[self.mode])
 
-        if 'PREFETCH' in self.mode and self.nb_prefetched_frames:
-            self._SimuCamera.getFrameGetter().setNbPrefetchedFrames(self.nb_prefetched_frames)
+        if "PREFETCH" in self.mode and self.nb_prefetched_frames:
+            self._SimuCamera.getFrameGetter().setNbPrefetchedFrames(
+                self.nb_prefetched_frames
+            )
 
         if self.frame_dim:
             frame_dim = self.getFrameDimFromLongArray(self.frame_dim)
@@ -135,11 +138,11 @@ class Simulator(PyTango.Device_4Impl):
     def getFrameDimFromLongArray(self, dim_arr):
         width, height, depth = dim_arr
         if depth == 1:
-            image_type = Core.Bpp8
+            image_type = Core.ImageType.Bpp8
         elif depth == 2:
-            image_type = Core.Bpp16
+            image_type = Core.ImageType.Bpp16
         elif depth == 4:
-            image_type = Core.Bpp32
+            image_type = Core.ImageType.Bpp32
         else:
             raise ValueError("Unknown pixel depth: %d" % depth)
         return Core.FrameDim(width, height, image_type)
@@ -205,11 +208,14 @@ class Simulator(PyTango.Device_4Impl):
         sx, sy = attr.get_write_value()
         self._SimuCamera.getFrameGetter().setDiffractionSpeed(sx, sy)
 
-    def read_nb_prefetched_frames(self,attr) :
-        if (self._SimuCamera.getMode() == SimuMod.Camera.MODE_GENERATOR_PREFETCH) or \
-           (self._SimuCamera.getMode() == SimuMod.Camera.MODE_LOADER_PREFETCH) :
-            nb_prefetched_frames = self._SimuCamera.getFrameGetter().getNbPrefetchedFrames()
-        else :
+    def read_nb_prefetched_frames(self, attr):
+        if (
+            self._SimuCamera.getMode() == SimuMod.Camera.Mode.MODE_GENERATOR_PREFETCH
+        ) or (self._SimuCamera.getMode() == SimuMod.Camera.Mode.MODE_LOADER_PREFETCH):
+            nb_prefetched_frames = (
+                self._SimuCamera.getFrameGetter().getNbPrefetchedFrames()
+            )
+        else:
             nb_prefetched_frames = 0
         attr.set_value(nb_prefetched_frames)
 
@@ -222,6 +228,7 @@ class Simulator(PyTango.Device_4Impl):
         dim_arr = attr.get_write_value()
         frame_dim = self.getFrameDimFromLongArray(dim_arr)
         self._SimuCamera.setFrameDim(frame_dim)
+
 
 class SimulatorClass(PyTango.DeviceClass):
 
