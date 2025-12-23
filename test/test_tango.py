@@ -17,7 +17,7 @@ import numpy
 import time
 import logging
 import pytest
-from Lima import Core
+from lima import core
 from unittest import mock
 
 try:
@@ -150,7 +150,7 @@ def test_property_frame_dim(cleanup_simulator):
     frame_dim = camera.getFrameDim()
     assert frame_dim.getSize().getWidth() == 10
     assert frame_dim.getSize().getHeight() == 20
-    assert frame_dim.getImageType() == Core.Bpp32
+    assert frame_dim.getImageType() == core.ImageType.Bpp32
 
 
 def test_property_fill_type(cleanup_simulator):

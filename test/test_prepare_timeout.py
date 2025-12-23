@@ -2,7 +2,7 @@
 # This file is part of gldisplay, a submodule of LImA project the
 # Library for Image Acquisition
 #
-# Copyright (C) : 2009-2011
+# Copyright (C) : 2009-2026
 # European Synchrotron Radiation Facility
 # BP 220, Grenoble 38043
 # FRANCE
@@ -27,17 +27,17 @@ import weakref
 import threading
 import getopt
 
-from Lima import Core
-from Lima import Simulator
+from lima import core
+from lima import simulator
 
-Core.DEB_GLOBAL(Core.DebModTest)
+core.DEB_GLOBAL(core.DebModTest)
 
 class CheckControl:
-	Core.DEB_CLASS(Core.DebModTest, 'CheckControl')
+	core.DEB_CLASS(core.DebModTest, 'CheckControl')
 
-	class ImageStatusCallback(Core.CtControl.ImageStatusCallback):
+	class ImageStatusCallback(core.CtControl.ImageStatusCallback):
 		def __init__(self, test_control, cb_end):
-			Core.CtControl.ImageStatusCallback.__init__(self)
+			core.CtControl.ImageStatusCallback.__init__(self)
 			self.test_control = weakref.ref(test_control)
 			self.cb_end = cb_end
 
@@ -50,21 +50,21 @@ class CheckControl:
 			del test_control
 			self.cb_end.set()
 
-	@Core.DEB_MEMBER_FUNCT
+	@core.DEB_MEMBER_FUNCT
 	def __init__(self):
-		self.simu = Simulator.Camera()
-		self.simu_hw = Simulator.Interface(self.simu)
-		self.ct_control = Core.CtControl(self.simu_hw)
+		self.simu = simulator.Camera()
+		self.simu_hw = simulator.Interface(self.simu)
+		self.ct_control = core.CtControl(self.simu_hw)
 		self.cb_end = threading.Event()
 		self.cb = self.ImageStatusCallback(self, self.cb_end)
 		self.ct_control.registerImageStatusCallback(self.cb)
 
-	@Core.DEB_MEMBER_FUNCT
+	@core.DEB_MEMBER_FUNCT
 	def __del__(self):
 		del self.ct_control
 		del self.simu_hw
 
-	@Core.DEB_MEMBER_FUNCT
+	@core.DEB_MEMBER_FUNCT
 	def start(self, exp_time, nb_frames, prepare_timeout, sleep_time):
 		ct_acq = self.ct_control.acquisition()
 		ct_acq.setAcqExpoTime(exp_time)
@@ -76,20 +76,20 @@ class CheckControl:
 		deb.Always('prepareAcq finished')
 		self.ct_control.startAcq()
 
-	@Core.DEB_MEMBER_FUNCT
+	@core.DEB_MEMBER_FUNCT
 	def waitAcq(self):
 		def acq_status():
 			return self.ct_control.getStatus().AcquisitionStatus
-		while acq_status() == Core.AcqRunning:
+		while acq_status() == core.AcqRunning:
 			time.sleep(10e-3)
 		deb.Always('Acq. is ready')
 
-	@Core.DEB_MEMBER_FUNCT
+	@core.DEB_MEMBER_FUNCT
 	def sync(self):
 		self.waitAcq()
 		self.cb_end.wait()
 
-	@Core.DEB_MEMBER_FUNCT
+	@core.DEB_MEMBER_FUNCT
 	def imageStatusChanged(self, img_status):
 		last_img_ready = img_status.LastImageReady
 		if last_img_ready < 0:
@@ -102,7 +102,7 @@ class CheckControl:
 
 
 class CheckControlAutoSync:
-	Core.DEB_CLASS(Core.DebModTest, 'CheckControlAutoSync')
+	core.DEB_CLASS(core.DebModTest, 'CheckControlAutoSync')
 
 	def __init__(self):
 		self.test_control = CheckControl()
@@ -113,7 +113,7 @@ class CheckControlAutoSync:
 		self.test_control.sync()
 		self.traceRefCount(3)
 
-	@Core.DEB_MEMBER_FUNCT
+	@core.DEB_MEMBER_FUNCT
 	def traceRefCount(self, point):
 		deb.Trace("%s* refcount(test_control): %s" %
 			  (point, sys.getrefcount(self.test_control)))
@@ -122,7 +122,7 @@ class CheckControlAutoSync:
 		return getattr(self.test_control, name)
 
 
-@Core.DEB_FUNCT
+@core.DEB_FUNCT
 def main(argv):
 	verbose = False
 
@@ -131,8 +131,8 @@ def main(argv):
 		if opt == '-v':
 			verbose = True
 
-	deb_type_flags = Core.DebParams.AllFlags if verbose else 0
-	Core.DebParams.setTypeFlags(deb_type_flags)
+	deb_type_flags = core.DebParams.AllFlags if verbose else 0
+	core.DebParams.setTypeFlags(deb_type_flags)
 
 	exp_time = 0.1
 
@@ -160,7 +160,7 @@ def main(argv):
 	try:
 		test_control.start(exp_time, nb_frames, prepare_timeout,
 				   sleep_time)
-	except Core.Exception as e:
+	except core.Exception as e:
 		if err in e.args[0]:
 			ok = True
 			deb.Always('Got good exception: %s' % e)

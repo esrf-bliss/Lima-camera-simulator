@@ -112,37 +112,37 @@ For a quick test one can use the python binding, here is a short code example:
 
 .. code-block:: python
 
-  from Lima import Simulator
-  from Lima import Core
+  from lima import simulator
+  from lima import core
   import time
 
   def test_mode_generator(cam, nb_frames_prefetched = 0):
       if nb_frames_prefetched:
-          cam.setMode(Simulator.Camera.MODE_GENERATOR_PREFETCH)
+          cam.setMode(simulator.Camera.MODE_GENERATOR_PREFETCH)
           fb = cam.getFrameGetter()
           fb.setNbPrefetchedFrames(nb_frames_prefetched);
       else:
-          cam.setMode(Simulator.Camera.MODE_GENERATOR)
+          cam.setMode(simulator.Camera.MODE_GENERATOR)
           fb = cam.getFrameGetter()
 
       # Add a peak
-      p1 = Simulator.GaussPeak(10, 10, 23, 1000) # peak at 10,10 fwhm=23 and max=1000
+      p1 = simulator.GaussPeak(10, 10, 23, 1000) # peak at 10,10 fwhm=23 and max=1000
       fb.setPeaks([p1])
 
 
   def test_mode_loader(cam, nb_frames_prefetched = 0):
       if nb_frames_prefetched:
-          cam.setMode(Simulator.Camera.MODE_LOADER_PREFETCH)
+          cam.setMode(simulator.Camera.MODE_LOADER_PREFETCH)
           fb = cam.getFrameGetter()
           test = fb.getNbPrefetchedFrames();
       else:
-          cam.setMode(Simulator.Camera.MODE_LOADER)
+          cam.setMode(simulator.Camera.MODE_LOADER)
           fb = cam.getFrameGetter()
 
       # Set file pattern
       fb.setFilePattern(b'input\\test_*.edf')
 
-  cam = Simulator.Camera()
+  cam = simulator.Camera()
 
   # Select one of the mode to test
   #test_mode_generator(cam)
@@ -151,10 +151,10 @@ For a quick test one can use the python binding, here is a short code example:
   test_mode_loader(cam, 100)
 
   # Get the hardware interface
-  hwint = Simulator.Interface(cam)
+  hwint = simulator.Interface(cam)
 
   # Get the control interface
-  control = Core.CtControl(hwint)
+  control = core.CtControl(hwint)
 
   # Get the acquisition control
   acq = control.acquisition()
@@ -166,8 +166,8 @@ For a quick test one can use the python binding, here is a short code example:
   pars.directory='/tmp/'
   pars.prefix='testsimul_'
   pars.suffix='.edf'
-  pars.fileFormat=Core.CtSaving.EDF
-  pars.savingMode=Core.CtSaving.AutoFrame
+  pars.fileFormat=core.CtSaving.EDF
+  pars.savingMode=core.CtSaving.AutoFrame
   saving.setParameters(pars)
 
   # Now ask for 2 sec. exposure and 10 frames
