@@ -62,7 +62,7 @@ def test_internal_trigger():
     ct.prepareAcq()
     ct.startAcq()
 
-    while ct.getStatus().AcquisitionStatus != core.AcqReady:
+    while ct.getStatus().AcquisitionStatus != core.AcqStatus.AcqReady:
         time.sleep(0.1)
 
     # Counter status are updated asynchronously (in another thread)
@@ -79,7 +79,7 @@ def test_internal_trigger_multi():
     ct.registerImageStatusCallback(acq_status)
 
     acq = ct.acquisition()
-    acq.setTriggerMode(core.IntTrigMult)
+    acq.setTriggerMode(core.TrigMode.IntTrigMult)
     acq.setAcqNbFrames(3)
     acq.setAcqExpoTime(0.01)
 
@@ -88,10 +88,10 @@ def test_internal_trigger_multi():
         time.sleep(0.1)
         ct.startAcq()
         # Make sure the detector is ready for next image
-        while hw.getStatus().acq != core.AcqReady:
+        while hw.getStatus().acq != core.AcqStatus.AcqReady:
             time.sleep(0.1)
 
-    while ct.getStatus().AcquisitionStatus != core.AcqReady:
+    while ct.getStatus().AcquisitionStatus != core.AcqStatus.AcqReady:
         time.sleep(0.1)
 
     # Counter status are updated asynchronously (in another thread)
@@ -108,7 +108,7 @@ def test_external_trigger_single():
     ct.registerImageStatusCallback(acq_status)
 
     acq = ct.acquisition()
-    acq.setTriggerMode(core.ExtTrigSingle)
+    acq.setTriggerMode(core.TrigMode.ExtTrigSingle)
     acq.setAcqNbFrames(3)
     acq.setAcqExpoTime(0.01)
 
@@ -116,7 +116,7 @@ def test_external_trigger_single():
     ct.startAcq()     # arm
     cam.extTrigAcq()  # simulate an external trigger
 
-    while ct.getStatus().AcquisitionStatus != core.AcqReady:
+    while ct.getStatus().AcquisitionStatus != core.AcqStatus.AcqReady:
         time.sleep(0.1)
 
     # Counter status are updated asynchronously (in another thread)
@@ -133,7 +133,7 @@ def test_external_trigger_multi():
     ct.registerImageStatusCallback(acq_status)
 
     acq = ct.acquisition()
-    acq.setTriggerMode(core.ExtTrigMult)
+    acq.setTriggerMode(core.TrigMode.ExtTrigMult)
     acq.setAcqNbFrames(3)
     acq.setAcqExpoTime(0.01)
 
@@ -143,10 +143,10 @@ def test_external_trigger_multi():
         cam.extTrigAcq()  # simulate an external trigger
         time.sleep(0.1)
         # Make sure the detector is ready for next image
-        while hw.getStatus().acq != core.AcqReady:
+        while hw.getStatus().acq != core.AcqStatus.AcqReady:
             time.sleep(0.1)
 
-    while ct.getStatus().AcquisitionStatus != core.AcqReady:
+    while ct.getStatus().AcquisitionStatus != core.AcqStatus.AcqReady:
         time.sleep(0.1)
 
     # Counter status are updated asynchronously (in another thread)
@@ -162,11 +162,11 @@ def test_small_detector_size():
     cam = simulator.Camera()
     hw = simulator.Interface(cam)
     ct = core.CtControl(hw)
-    cam.setFrameDim(core.FrameDim(100, 100, core.Bpp32))
+    cam.setFrameDim(core.FrameDim(100, 100, core.ImageType.Bpp32))
     dim = ct.image().getImageDim()
     assert dim.getSize() == core.Size(100, 100)
 
-    detinfo = hw.getHwCtrlObj(core.HwCap.DetInfo)
+    detinfo = hw.getHwCtrlObj(core.HwCap.Type.DetInfo)
     assert detinfo.getMaxImageSize() == core.Size(100, 100)
 
 
@@ -178,11 +178,11 @@ def test_big_detector_size():
     cam = simulator.Camera()
     hw = simulator.Interface(cam)
     ct = core.CtControl(hw)
-    cam.setFrameDim(core.FrameDim(2048, 2000, core.Bpp32))
+    cam.setFrameDim(core.FrameDim(2048, 2000, core.ImageType.Bpp32))
     dim = ct.image().getImageDim()
     assert dim.getSize() == core.Size(2048, 2000)
 
-    detinfo = hw.getHwCtrlObj(core.HwCap.DetInfo)
+    detinfo = hw.getHwCtrlObj(core.HwCap.Type.DetInfo)
     assert detinfo.getMaxImageSize() == core.Size(2048, 2000)
 
 
@@ -194,7 +194,7 @@ def test_update_mode():
     cam = simulator.Camera()
     hw = simulator.Interface(cam)
     ct = core.CtControl(hw)
-    cam.setFrameDim(core.FrameDim(100, 100, core.Bpp32))
+    cam.setFrameDim(core.FrameDim(100, 100, core.ImageType.Bpp32))
     dim = ct.image().getImageDim()
     assert dim.getSize() == core.Size(100, 100)
 
@@ -212,7 +212,7 @@ def test_default_pixel_size():
     """
     cam = simulator.Camera()
     hw = simulator.Interface(cam)
-    detInfo = hw.getHwCtrlObj(core.HwCap.DetInfo)
+    detInfo = hw.getHwCtrlObj(core.HwCap.Type.DetInfo)
     pixelsize = detInfo.getPixelSize()
     assert pixelsize == (1e-6, 1e-6)
 
@@ -225,7 +225,7 @@ def test_custom_pixel_size():
     cam = simulator.Camera()
     cam.setPixelSize(1e-3, 1e-4)
     hw = simulator.Interface(cam)
-    detInfo = hw.getHwCtrlObj(core.HwCap.DetInfo)
+    detInfo = hw.getHwCtrlObj(core.HwCap.Type.DetInfo)
     pixelsize = detInfo.getPixelSize()
     assert pixelsize == (1e-3, 1e-4)
 
@@ -252,7 +252,7 @@ def test_custom_frame():
     ct.prepareAcq()
     ct.startAcq()
 
-    wait_for(lambda: ct.getStatus().AcquisitionStatus != core.AcqRunning, 100)
+    wait_for(lambda: ct.getStatus().AcquisitionStatus != core.AcqStatus.AcqRunning, 100)
     assert process_count == 1
 
 
@@ -278,7 +278,7 @@ def test_custom_frame_exception():
     ct = core.CtControl(hw)
 
     acq = ct.acquisition()
-    acq.setTriggerMode(core.IntTrigMult)
+    acq.setTriggerMode(core.TrigMode.IntTrigMult)
     acq.setAcqNbFrames(3)
     acq.setAcqExpoTime(0.01)
 
@@ -289,7 +289,7 @@ def test_custom_frame_exception():
     def wait_for_next_frame_ready():
         def check_next_frame_ready():
             status = hw.getStatus()
-            ready = status.det == core.DetIdle or status.det & core.DetWaitForTrigger
+            ready = status.det == core.DetStatus.DetIdle or status.det & core.DetStatus.DetWaitForTrigger
             return bool(ready)
         wait_for(check_next_frame_ready, 100)
 
@@ -301,7 +301,7 @@ def test_custom_frame_exception():
 
     # The second frame trigges an internal error
     ct.startAcq()
-    wait_for(lambda: ct.getStatus().AcquisitionStatus == core.AcqFault, 100)
+    wait_for(lambda: ct.getStatus().AcquisitionStatus == core.AcqStatus.AcqFault, 100)
     imageStatus = ct.getImageStatus()
     assert imageStatus.LastImageReady == 0, imageStatus
 
@@ -323,14 +323,14 @@ def test_gauss_fill():
     ct = core.CtControl(hw)
 
     acq = ct.acquisition()
-    acq.setTriggerMode(core.IntTrig)
+    acq.setTriggerMode(core.TrigMode.IntTrig)
     acq.setAcqNbFrames(3)
     acq.setAcqExpoTime(0.01)
 
     ct.prepareAcq()
     ct.startAcq()
 
-    wait_for(lambda: ct.getStatus().AcquisitionStatus != core.AcqRunning, 100)
+    wait_for(lambda: ct.getStatus().AcquisitionStatus != core.AcqStatus.AcqRunning, 100)
     assert processed_frames == [1096524, 2225892, 3356544]
 
 
@@ -352,12 +352,12 @@ def test_empty_fill():
     ct = core.CtControl(hw)
 
     acq = ct.acquisition()
-    acq.setTriggerMode(core.IntTrig)
+    acq.setTriggerMode(core.AcqStatus.IntTrig)
     acq.setAcqNbFrames(3)
     acq.setAcqExpoTime(0.01)
 
     ct.prepareAcq()
     ct.startAcq()
 
-    wait_for(lambda: ct.getStatus().AcquisitionStatus != core.AcqRunning, 100)
+    wait_for(lambda: ct.getStatus().AcquisitionStatus != core.AcqStatus.AcqRunning, 100)
     assert processed_frames == [0, 0, 0]

@@ -80,7 +80,7 @@ class CheckControl:
 	def waitAcq(self):
 		def acq_status():
 			return self.ct_control.getStatus().AcquisitionStatus
-		while acq_status() == core.AcqRunning:
+		while acq_status() == core.AcqStatus.AcqRunning:
 			time.sleep(10e-3)
 		deb.Always('Acq. is ready')
 
@@ -102,7 +102,7 @@ class CheckControl:
 
 
 class CheckControlAutoSync:
-	core.DEB_CLASS(core.DebModTest, 'CheckControlAutoSync')
+	core.DEB_CLASS(core.DebModule.DebModTest, 'CheckControlAutoSync')
 
 	def __init__(self):
 		self.test_control = CheckControl()
