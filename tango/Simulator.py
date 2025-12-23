@@ -26,10 +26,10 @@
 import itertools
 import PyTango
 
-from Lima.Server import AttrHelper
+from lima.server import AttrHelper
 
-from Lima import Core
-from Lima import Simulator as SimuMod
+from lima import core
+from lima import simulator as SimuMod
 
 
 def grouper(n, iterable, padvalue=None):
@@ -66,7 +66,7 @@ class Simulator(PyTango.Device_4Impl):
         "EMPTY": SimuMod.FrameBuilder.FillType.Empty,
     }
 
-    Core.DEB_CLASS(Core.DebModule.DebModApplication, "LimaSimulator")
+    core.DEB_CLASS(core.DebModule.DebModApplication, "LimaSimulator")
 
     # ------------------------------------------------------------------
     #    Device constructor
@@ -94,7 +94,7 @@ class Simulator(PyTango.Device_4Impl):
     # ------------------------------------------------------------------
     #    Device initialization
     # ------------------------------------------------------------------
-    @Core.DEB_MEMBER_FUNCT
+    @core.DEB_MEMBER_FUNCT
     def init_device(self):
         # Apply properties if any
         if self.mode and (Simulator._Mode.get(self.mode) != None):
@@ -134,25 +134,25 @@ class Simulator(PyTango.Device_4Impl):
             fill_type = Simulator._FillType[self.fill_type]
             self._SimuCamera.getFrameGetter().setFillType(fill_type)
 
-    @Core.DEB_MEMBER_FUNCT
+    @core.DEB_MEMBER_FUNCT
     def getFrameDimFromLongArray(self, dim_arr):
         width, height, depth = dim_arr
         if depth == 1:
-            image_type = Core.ImageType.Bpp8
+            image_type = core.ImageType.Bpp8
         elif depth == 2:
-            image_type = Core.ImageType.Bpp16
+            image_type = core.ImageType.Bpp16
         elif depth == 4:
-            image_type = Core.ImageType.Bpp32
+            image_type = core.ImageType.Bpp32
         else:
             raise ValueError("Unknown pixel depth: %d" % depth)
-        return Core.FrameDim(width, height, image_type)
+        return core.FrameDim(width, height, image_type)
 
-    @Core.DEB_MEMBER_FUNCT
+    @core.DEB_MEMBER_FUNCT
     def getLongArrayFromFrameDim(self, frame_dim):
         size = frame_dim.getSize()
         return [size.getWidth(), size.getHeight(), frame_dim.getDepth()]
 
-    @Core.DEB_MEMBER_FUNCT
+    @core.DEB_MEMBER_FUNCT
     def getAttrStringValueList(self, attr_name):
         return AttrHelper.get_attr_string_value_list(self, attr_name)
 
@@ -338,7 +338,7 @@ def get_control(
     if interface is None:
         camera = _Camera()
         interface = _Interface(camera)
-    control = Core.CtControl(interface)
+    control = core.CtControl(interface)
     _Simulator._SimuCamera = camera
     _Simulator._SimuInterface = interface
     return control

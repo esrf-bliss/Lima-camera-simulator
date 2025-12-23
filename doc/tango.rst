@@ -64,11 +64,11 @@ Tango camera simulator
 
    # module myproject.MySimulator.py
 
-   from Lima import Core
-   from Lima import Simulator
-   import Lima.Server.camera.Simulator as TangoSimuMod
+   from lima import core
+   from lima import simulator
+   import lima.server.camera.Simulator as TangoSimuMod
 
-   class MyCamera(Simulator.Camera):
+   class MyCamera(simulator.Camera):
        """Derive the camera in order to custom the way to render the frame"""
        def fillData(self, data):
            # Increment the first pixel every frames
