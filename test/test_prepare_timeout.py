@@ -30,10 +30,10 @@ import getopt
 from lima import core
 from lima import simulator
 
-core.DEB_GLOBAL(core.DebModTest)
+core.DEB_GLOBAL(core.DebModule.DebModTest)
 
 class CheckControl:
-	core.DEB_CLASS(core.DebModTest, 'CheckControl')
+	core.DEB_CLASS(core.DebModule.DebModTest, 'CheckControl')
 
 	class ImageStatusCallback(core.CtControl.ImageStatusCallback):
 		def __init__(self, test_control, cb_end):

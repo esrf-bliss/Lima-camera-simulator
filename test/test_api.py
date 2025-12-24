@@ -198,7 +198,7 @@ def test_update_mode():
     dim = ct.image().getImageDim()
     assert dim.getSize() == core.Size(100, 100)
 
-    new_mode = simulator.Camera.MODE_GENERATOR_PREFETCH
+    new_mode = simulator.Camera.Mode.MODE_GENERATOR_PREFETCH
     cam.setMode(new_mode)
 
     dim = ct.image().getImageDim()
@@ -289,7 +289,8 @@ def test_custom_frame_exception():
     def wait_for_next_frame_ready():
         def check_next_frame_ready():
             status = hw.getStatus()
-            ready = status.det == core.DetStatus.DetIdle or status.det & core.DetStatus.DetWaitForTrigger
+            #ready = status.det == core.DetStatus.DetIdle or status.det & core.DetStatus.DetWaitForTrigger
+            ready = status.det == core.DetStatus.DetIdle or status.det == core.DetStatus.DetWaitForTrigger
             return bool(ready)
         wait_for(check_next_frame_ready, 100)
 
@@ -347,12 +348,12 @@ def test_empty_fill():
             processed_frames.append(s)
 
     cam = MyCamera()
-    cam.getFrameGetter().setFillType(simulator.FrameBuilder.Empty)
+    cam.getFrameGetter().setFillType(simulator.FrameBuilder.FillType.Empty)
     hw = simulator.Interface(cam)
     ct = core.CtControl(hw)
 
     acq = ct.acquisition()
-    acq.setTriggerMode(core.AcqStatus.IntTrig)
+    acq.setTriggerMode(core.TrigMode.IntTrig)
     acq.setAcqNbFrames(3)
     acq.setAcqExpoTime(0.01)
 
