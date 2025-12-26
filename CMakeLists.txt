@@ -121,7 +121,7 @@ endif()
 
 # Binding code for python
 if(LIMA_ENABLE_PYTHON)
-  limatools_run_sip_for_camera(simulator)
+  limatools_run_sip_for_camera(simulator 7)
 endif()
 
 # Generate and install package config file and version
