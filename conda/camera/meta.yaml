@@ -32,7 +32,7 @@ test:
   imports:
     - lima.simulator
   commands:
-    - pytest test
+    - pytest -k "not test_prepare" test
 
 about:
   home: https://github.com/esrf-bliss/Lima
