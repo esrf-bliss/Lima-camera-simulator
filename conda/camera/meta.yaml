@@ -14,7 +14,7 @@ requirements:
   host:
     - python {{ python }}
     - lima-sip6 13
-    - lima-core 1.12*
+    - lima-core 1.11*
   build:
     - ninja
     - cmake
