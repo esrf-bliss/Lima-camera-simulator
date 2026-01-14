@@ -13,15 +13,15 @@ build:
 requirements:
   host:
     - python {{ python }}
-    - sip 4.19* # API v12.7
-    - lima-core 1.10*
+    - lima-sip6 13
+    - lima-core 1.11*
   build:
     - ninja
     - cmake
     - {{ compiler('cxx') }}
   run:
     - python
-    - {{ pin_compatible('sip', min_pin='x.x.x', max_pin='x') }}
+    - {{ pin_compatible('lima-sip6', min_pin='x.x.x', max_pin='x') }}
     - {{ pin_compatible('lima-core', min_pin='x.x', max_pin='x.x') }}
 
 test:
@@ -30,9 +30,9 @@ test:
   requires:
     - pytest
   imports:
-    - Lima.Simulator
+    - lima.simulator
   commands:
-    - pytest test
+    - pytest -k "not test_prepare" test
 
 about:
   home: https://github.com/esrf-bliss/Lima

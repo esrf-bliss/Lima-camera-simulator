@@ -22,7 +22,7 @@
 #  along with this program; if not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 4.0)
 
 project(simulator)
 
@@ -121,7 +121,7 @@ endif()
 
 # Binding code for python
 if(LIMA_ENABLE_PYTHON)
-  limatools_run_sip_for_camera(simulator)
+  limatools_run_sip_for_camera(simulator 7)
 endif()
 
 # Generate and install package config file and version
@@ -161,7 +161,7 @@ install(
 if(LIMA_ENABLE_PYTHON)
   install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python/
-    DESTINATION "$<PATH:CMAKE_PATH,NORMALIZE,${Python3_SITEARCH}/Lima/Simulator>"
+    DESTINATION "$<PATH:CMAKE_PATH,NORMALIZE,${Python3_SITEARCH}/lima/simulator>"
   )
   if (LIMA_ENABLE_PYTANGO_SERVER)
     add_subdirectory(tango)
