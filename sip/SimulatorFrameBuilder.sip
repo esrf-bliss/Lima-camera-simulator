@@ -180,6 +180,9 @@ public:
 
 	void getDiffractionSpeed( double &sx /Out/, double &sy /Out/ ) const;
 	void setDiffractionSpeed( const double &sx, const double &sy );
+
+	void getNoiseLevel(float &level /Out/) const;
+	void setNoiseLevel(const float &level);
 	
 private:
 	FrameBuilder();
