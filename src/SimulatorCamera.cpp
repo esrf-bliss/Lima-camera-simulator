@@ -273,23 +273,35 @@ void Camera::constructFrameGetter()
 {
   DEB_MEMBER_FUNCT();
 
+  FrameGetter *frame_getter = NULL;
+
   switch (m_mode) {
   case Mode::MODE_GENERATOR:
-    m_frame_getter = new FrameBuilder();
+    frame_getter = new FrameBuilder();
     break;
 
   case Mode::MODE_GENERATOR_PREFETCH:
-    m_frame_getter = new FramePrefetcher<FrameBuilder>();
+    frame_getter = new FramePrefetcher<FrameBuilder>();
     break;
 
   case Mode::MODE_LOADER:
-    m_frame_getter = new FrameLoader();
+    frame_getter = new FrameLoader();
     break;
 
   case Mode::MODE_LOADER_PREFETCH:
-    m_frame_getter = new FramePrefetcher<FrameLoader>();
+    frame_getter = new FramePrefetcher<FrameLoader>();
     break;
   }
+
+  if (m_frame_getter)
+  {
+    FrameDim dim;
+    m_frame_getter->getFrameDim(dim);
+    frame_getter->setFrameDim(dim);
+    delete m_frame_getter;
+  }
+
+  m_frame_getter = frame_getter;
   
   // The callback might not have been set at this point
   if (m_cbk)
@@ -309,8 +321,6 @@ void Camera::setMode(const Mode &mode)
   DEB_MEMBER_FUNCT();
 
   if (mode != m_mode) {
-    delete m_frame_getter;
-
     m_mode = mode;
     constructFrameGetter();
   }

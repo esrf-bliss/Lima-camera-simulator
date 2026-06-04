@@ -38,7 +38,8 @@
 
 using namespace lima;
 using namespace lima::Simulator;
-using namespace std;
+
+DEB_GLOBAL(DebModCamera);
 
 /**
  * @brief FrameBuilder class default constructor
@@ -50,7 +51,7 @@ FrameBuilder::FrameBuilder()
   Bin bin            = Bin(1, 1);
   Roi roi            = Roi(0, Size(0, 0)); // Or the whole frame?
   GaussPeak p(512, 512, 100, 100);         // in unbinned units!
-  vector<struct GaussPeak> peaks(&p, &p + 1);
+  std::vector<struct GaussPeak> peaks(&p, &p + 1);
   double grow_factor = 1.00;
 
   init(frame_dim, bin, roi, peaks, grow_factor);
@@ -152,7 +153,7 @@ void FrameBuilder::checkPeaks(PeakList const &peaks)
   getMaxImageSize(max_size);
   Roi roi = Roi(0, max_size);
 
-  vector<GaussPeak>::const_iterator p;
+  std::vector<GaussPeak>::const_iterator p;
   for (p = peaks.begin(); p != peaks.end(); ++p) {
     if (!roi.containsPoint(Point(int(p->x0), int(p->y0)))) throw LIMA_HW_EXC(InvalidValue, "Peak too far");
   }
@@ -165,7 +166,11 @@ void FrameBuilder::checkPeaks(PeakList const &peaks)
  *******************************************************************/
 void FrameBuilder::getFrameDim(FrameDim &dim) const
 {
+  DEB_MEMBER_FUNCT();
+
   dim = m_frame_dim;
+
+  DEB_RETURN() << DEB_VAR1(dim);
 }
 
 /**
@@ -175,9 +180,13 @@ void FrameBuilder::getFrameDim(FrameDim &dim) const
  *******************************************************************/
 void FrameBuilder::getEffectiveFrameDim(FrameDim &dim) const
 {
+  DEB_MEMBER_FUNCT();
+
   dim = m_frame_dim / m_bin;
   if (!m_roi.isEmpty())
     dim.setSize(m_roi.getSize());
+
+  DEB_RETURN() << DEB_VAR1(dim);
 }
 
 /**
@@ -187,6 +196,9 @@ void FrameBuilder::getEffectiveFrameDim(FrameDim &dim) const
  *******************************************************************/
 void FrameBuilder::setFrameDim(const FrameDim &dim)
 {
+  DEB_MEMBER_FUNCT();
+  DEB_PARAM() << DEB_VAR1(dim);
+
   Roi roi = m_roi;
   if (dim != m_frame_dim)
     roi.reset();
@@ -199,7 +211,7 @@ void FrameBuilder::setFrameDim(const FrameDim &dim)
   m_roi = roi;
 
   // Keep aspect-ratio of peaks' positions
-  vector<GaussPeak>::iterator p;
+  std::vector<GaussPeak>::iterator p;
   for (p = m_peaks.begin(); p != m_peaks.end(); ++p) {
     p->x0 *= double(new_size.getWidth()) / prev_size.getWidth();
     p->y0 *= double(new_size.getHeight()) / prev_size.getHeight();
@@ -285,8 +297,8 @@ void FrameBuilder::checkRoi(Roi &roi) const
 
   Point br = roi.getBottomRight();
   Point max_br = full_roi.getBottomRight();
-  br.x = min(br.x, max_br.x);
-  br.y = min(br.y, max_br.y);
+  br.x = std::min(br.x, max_br.x);
+  br.y = std::min(br.y, max_br.y);
   roi.setSize(br + 1 - roi.getTopLeft());
 }
 
