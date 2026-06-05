@@ -26,6 +26,7 @@
 #endif
 #include <cmath>
 #include <vector>
+#include <random>
 #ifdef __unix
 #include <sys/time.h>
 #include <unistd.h>
@@ -493,6 +494,28 @@ void FrameBuilder::setDiffractionSpeed(const double &sx, const double &sy)
   m_diffract_sy = sy;
 }
 
+/**
+ * @brief Gets the source displacement speed for
+ *diffraction
+ *
+ * @param[out] sx, sy  x and y speeds (double)
+ *******************************************************************/
+void FrameBuilder::getNoiseLevel(float &level) const
+{
+  level = m_noise_level;
+}
+
+/**
+ * @brief Gets the source displacement speed for
+ *diffraction
+ *
+ * @param[out] sx, sy  x and y speeds (double)
+ *******************************************************************/
+void FrameBuilder::setNoiseLevel(const float &level)
+{
+  m_noise_level = level;
+}
+
 #define SGM_FWHM 0.42466090014400952136075141705144 // 1/(2*sqrt(2*ln(2)))
 
 /**
@@ -590,6 +613,40 @@ double FrameBuilder::dataXY(unsigned long frame_nr, const PeakList &peaks, int x
   return val;
 }
 
+struct NoiseGenerator
+{
+  // Use a prime number to make sure that we dont get an obvious noise pattern
+  static const int size_of_noise_buffer = 97; 
+
+  NoiseGenerator(double mean, double stddev) :
+    gen(rd()),
+    dist(mean, stddev),
+    circular_buffer(size_of_noise_buffer),
+    current(circular_buffer.begin())
+  {
+    std::generate(circular_buffer.begin(), circular_buffer.end(), [this]() { return dist(gen); });
+  }
+
+  double operator()() const
+  {
+    current++;
+    if (current == circular_buffer.end())
+    {
+      std::shuffle(circular_buffer.begin(), circular_buffer.end(), gen);
+      current = circular_buffer.begin();
+    }
+    return std::abs(*current);
+  }
+
+  std::random_device rd;
+  mutable std::mt19937 gen;
+  std::normal_distribution<double> dist;
+  
+
+  mutable std::vector<double> circular_buffer;
+  mutable std::vector<double>::const_iterator current;
+};
+
 /**
  * @brief Calculates and writes the "image" into the
  *buffer
@@ -601,7 +658,7 @@ double FrameBuilder::dataXY(unsigned long frame_nr, const PeakList &peaks, int x
  * @param[in] ptr  an (unsigned char) pointer to an
  *allocated buffer
  *******************************************************************/
-template <class depth>
+template <typename T>
 void FrameBuilder::fillData(unsigned long frame_nr, unsigned char *ptr) const
 {
   int x, bx, bx0, bxM, y, by, by0, byM;
@@ -609,8 +666,7 @@ void FrameBuilder::fillData(unsigned long frame_nr, unsigned char *ptr) const
   int binY   = m_bin.getY();
   int width  = m_frame_dim.getSize().getWidth();
   int height = m_frame_dim.getSize().getHeight();
-  depth *p   = (depth *)ptr;
-  double data, max;
+  T *p   = (T *)ptr;
 
   if (!m_roi.isEmpty()) {
     bx0 = m_roi.getTopLeft().x;
@@ -626,17 +682,22 @@ void FrameBuilder::fillData(unsigned long frame_nr, unsigned char *ptr) const
   double rot_angle = m_rot_angle + m_rot_speed * frame_nr;
   PeakList peaks   = getGaussPeaksFrom3d(rot_angle);
 
-  max = (double)((depth)-1);
+  NoiseGenerator noiseGenerator(0., m_noise_level);
+
+  double max = (double) std::numeric_limits<T>::max();
   for (by = by0; by < byM; by++) {
     for (bx = bx0; bx < bxM; bx++) {
-      data = 0.0;
+      double data = 0.0;
       for (y = by * binY; y < by * binY + binY; y++) {
         for (x = bx * binX; x < bx * binX + binX; x++) {
           data += dataXY(frame_nr, peaks, x, y);
+          if (m_noise_level > 0.0)
+            data += noiseGenerator();
         }
       }
-      if (data > max) data = max; // ???
-      *p++ = (depth)data;
+      if (data > max)
+        data = max;
+      *p++ = std::round<T>(data);
     }
   }
 }

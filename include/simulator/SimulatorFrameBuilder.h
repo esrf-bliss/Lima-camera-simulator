@@ -115,6 +115,9 @@ public:
   void getDiffractionSpeed(double &sx, double &sy) const;
   void setDiffractionSpeed(const double &sx, const double &sy);
 
+  void getNoiseLevel(float &level) const;
+  void setNoiseLevel(const float &level);
+
   bool getFrame(unsigned long frame_nr, unsigned char *ptr) override;
   void prepareAcq() {}
 
@@ -138,6 +141,8 @@ private:
   double m_diffract_y;
   double m_diffract_sx;
   double m_diffract_sy;
+
+  float m_noise_level = 0.0f;
 
   void init(FrameDim &frame_dim, Bin &bin, Roi &roi, const PeakList &peaks, double grow_factor);
 

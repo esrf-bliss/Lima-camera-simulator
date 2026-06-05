@@ -208,6 +208,14 @@ class Simulator(PyTango.Device_4Impl):
         sx, sy = attr.get_write_value()
         self._SimuCamera.getFrameGetter().setDiffractionSpeed(sx, sy)
 
+    def read_noise_level(self, attr):
+        noise = self._SimuCamera.getFrameGetter().getNoiseLevel()
+        attr.set_value(noise)
+
+    def write_noise_level(self, attr):
+        noise = attr.get_write_value()
+        self._SimuCamera.getFrameGetter().setNoiseLevel(noise)
+
     def read_nb_prefetched_frames(self, attr):
         if (
             self._SimuCamera.getMode() == SimuMod.Camera.Mode.MODE_GENERATOR_PREFETCH
@@ -301,6 +309,7 @@ class SimulatorClass(PyTango.DeviceClass):
         ],
         "rotation_angle": [[PyTango.DevDouble, PyTango.SCALAR, PyTango.READ_WRITE]],
         "rotation_speed": [[PyTango.DevDouble, PyTango.SCALAR, PyTango.READ_WRITE]],
+        "noise_level": [[PyTango.DevDouble, PyTango.SCALAR, PyTango.READ_WRITE]],
     }
 
     def __init__(self, name):

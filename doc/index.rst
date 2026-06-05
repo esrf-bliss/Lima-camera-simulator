@@ -70,6 +70,7 @@ The class :cpp:class:`FrameBuilder` can be parametrized with:
  - :cpp:func:`setGrowFactor()`: set a growing factor (default is 1.0)
  - :cpp:func:`setDiffractionPos()`: set the source diplacement position x and y (default is center)
  - :cpp:func:`setDiffractionSpeed()`: set the source diplacement speed sx and sy (default is 0,0)
+ - :cpp:func:`setNoiseLevel()`: set stddev of the gaussian noise added to the generated image (default is 0)
 
 The class :cpp:class:`FrameLoader` can be parametrized with:
 
@@ -128,6 +129,9 @@ For a quick test one can use the python binding, here is a short code example:
       # Add a peak
       p1 = simulator.GaussPeak(10, 10, 23, 1000) # peak at 10,10 fwhm=23 and max=1000
       fb.setPeaks([p1])
+
+      # Add noise
+      fb.setNoiseLevel(0.8)
 
 
   def test_mode_loader(cam, nb_frames_prefetched = 0):
