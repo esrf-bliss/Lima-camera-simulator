@@ -237,6 +237,10 @@ class Simulator(PyTango.Device_4Impl):
         frame_dim = self.getFrameDimFromLongArray(dim_arr)
         self._SimuCamera.setFrameDim(frame_dim)
 
+    def write_file_pattern(self, attr):
+        pattern = attr.get_write_value()
+        self._SimuCamera.getFrameGetter().setFilePattern(pattern)
+
 
 class SimulatorClass(PyTango.DeviceClass):
 
