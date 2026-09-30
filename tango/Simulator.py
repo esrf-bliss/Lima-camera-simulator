@@ -233,7 +233,7 @@ class Simulator(Device):
         return list(self._SimuCamera.getFrameGetter().getPeakAngles())
 
     def _peak_angles_fset(self, peak_angle_list):
-        self._SimuCamera.getFrameGetter().setPeakAngles(map(float, peak_angle_list))
+        self._SimuCamera.getFrameGetter().setPeakAngles(list(map(float, peak_angle_list)))
 
     peak_angles_attr = attribute(
         name="peak_angles",
