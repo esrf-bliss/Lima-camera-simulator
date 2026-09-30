@@ -187,6 +187,7 @@ class Simulator(Device):
         dtype=(int,),
         max_dim_x=3,
         access=AttrWriteType.READ_WRITE,
+        doc="Size of the frame: width, height, depth (depth is one of 1, 2, 4)",
         fget=_frame_dim_fget,
         fset=_frame_dim_fset,
     )
@@ -207,6 +208,7 @@ class Simulator(Device):
         name="nb_prefetched_frames",
         dtype=int,
         access=AttrWriteType.READ_WRITE,
+        doc="Number of frames pre-fetched in memory (*_PREFETCH modes only)",
         fget=_nb_prefetched_frames_fget,
         fset=_nb_prefetched_frames_fset,
     )
@@ -225,6 +227,7 @@ class Simulator(Device):
         dtype=(float,),
         max_dim_x=4000,
         access=AttrWriteType.READ_WRITE,
+        doc="The gauss peak list [x0,y0,w0,A0,x1,y1,w1,A1...]",
         fget=_peaks_fget,
         fset=_peaks_fset,
     )
@@ -240,6 +243,7 @@ class Simulator(Device):
         dtype=(float,),
         max_dim_x=1000,
         access=AttrWriteType.READ_WRITE,
+        doc="The base rotation angle for each peak",
         fget=_peak_angles_fget,
         fset=_peak_angles_fset,
     )
@@ -251,6 +255,7 @@ class Simulator(Device):
         name="file_pattern",
         dtype=str,
         access=AttrWriteType.WRITE,
+        doc="File name pattern for the LOADER-mode frame source",
         fset=_file_pattern_fset,
     )
 
@@ -265,6 +270,7 @@ class Simulator(Device):
         dtype=(float,),
         max_dim_x=2,
         access=AttrWriteType.READ_WRITE,
+        doc="The source displacement position: x and y",
         fget=_diffraction_pos_fget,
         fset=_diffraction_pos_fset,
     )
@@ -280,6 +286,7 @@ class Simulator(Device):
         dtype=(float,),
         max_dim_x=2,
         access=AttrWriteType.READ_WRITE,
+        doc="The source displacement speed: sx and sy",
         fget=_diffraction_speed_fget,
         fset=_diffraction_speed_fset,
     )
@@ -298,6 +305,7 @@ class Simulator(Device):
         name="mode",
         dtype=str,
         access=AttrWriteType.READ_WRITE,
+        doc="Frame generation mode: GENERATOR, GENERATOR_PREFETCH, LOADER or LOADER_PREFETCH",
         fget=_mode_fget,
         fset=_mode_fset,
     )
@@ -312,6 +320,7 @@ class Simulator(Device):
         name="fill_type",
         dtype=str,
         access=AttrWriteType.READ_WRITE,
+        doc="The image fill type: Gauss or Diffraction",
         fget=_fill_type_fget,
         fset=_fill_type_fset,
     )
@@ -326,6 +335,7 @@ class Simulator(Device):
         name="rotation_axis",
         dtype=str,
         access=AttrWriteType.READ_WRITE,
+        doc="The rotation axis policy: RotationX or RotationY",
         fget=_rotation_axis_fget,
         fset=_rotation_axis_fset,
     )
@@ -338,6 +348,7 @@ class Simulator(Device):
     grow_factor = attribute(
         dtype=float,
         access=AttrWriteType.READ_WRITE,
+        doc="The grow factor for gauss peaks",
         fget=_grow_factor_fget,
         fset=_grow_factor_fset,
     )
@@ -350,6 +361,7 @@ class Simulator(Device):
     rotation_angle = attribute(
         dtype=float,
         access=AttrWriteType.READ_WRITE,
+        doc="The peak rotation angle in deg",
         fget=_rotation_angle_fget,
         fset=_rotation_angle_fset,
     )
@@ -362,6 +374,7 @@ class Simulator(Device):
     rotation_speed = attribute(
         dtype=float,
         access=AttrWriteType.READ_WRITE,
+        doc="The peak rotation speed in deg/frame",
         fget=_rotation_speed_fget,
         fset=_rotation_speed_fset,
     )
@@ -372,6 +385,7 @@ class Simulator(Device):
     noise_level = attribute(
         dtype=float,
         access=AttrWriteType.READ_WRITE,
+        doc="Amount of noise added to generated frames",
         fget=_noise_level_fget,
         fset=_noise_level_fset,
     )
