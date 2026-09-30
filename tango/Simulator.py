@@ -24,7 +24,9 @@
 # ----------------------------------------------------------------------------
 
 import itertools
-import PyTango
+
+from tango import AttrWriteType, DevState
+from tango.server import Device, attribute, command, device_property
 
 from lima.server import AttrHelper
 
@@ -36,7 +38,7 @@ def grouper(n, iterable, padvalue=None):
     return zip(*[itertools.chain(iterable, itertools.repeat(padvalue, n - 1))] * n)
 
 
-class Simulator(PyTango.Device_4Impl):
+class Simulator(Device):
 
     # ------------------------------------------------------------------
     #    Static properties
@@ -69,35 +71,34 @@ class Simulator(PyTango.Device_4Impl):
     core.DEB_CLASS(core.DebModule.DebModApplication, "LimaSimulator")
 
     # ------------------------------------------------------------------
-    #    Device constructor
+    #    Device properties (initial hardware configuration only - the
+    #    live attributes of the same name below read/write the camera
+    #    directly, they don't share storage with these)
     # ------------------------------------------------------------------
-    def __init__(self, *args):
-        PyTango.Device_4Impl.__init__(self, *args)
-
-        # Leagcy code used by AttrHelper
-        # switch to the new pyTango please
-        self.__Mode = self._Mode
-        self.__RotationAxis = self._RotationAxis
-        self.__FillType = self._FillType
-
-        # Load the properties
-        self.get_device_properties(self.get_device_class())
-        self.init_device()
-        self.set_state(PyTango.DevState.ON)
-
-    # ------------------------------------------------------------------
-    #    Device destructor
-    # ------------------------------------------------------------------
-    def delete_device(self):
-        pass
+    frame_dim = device_property(dtype=(int,), default_value=[])
+    pixel_size = device_property(dtype=(float,), default_value=[])
+    mode = device_property(dtype=str, default_value="")
+    nb_prefetched_frames = device_property(dtype=int, default_value=0)
+    peaks = device_property(dtype=(float,), default_value=[])
+    peak_angles = device_property(dtype=(float,), default_value=[])
+    fill_type = device_property(dtype=str, default_value="")
+    rotation_axis = device_property(dtype=str, default_value="")
 
     # ------------------------------------------------------------------
     #    Device initialization
     # ------------------------------------------------------------------
     @core.DEB_MEMBER_FUNCT
     def init_device(self):
+        Device.init_device(self)
+
+        # Leagcy code used by AttrHelper.get_attr_string_value_list
+        # switch to the new pyTango please
+        self.__Mode = self._Mode
+        self.__RotationAxis = self._RotationAxis
+        self.__FillType = self._FillType
+
         # Apply properties if any
-        if self.mode and (Simulator._Mode.get(self.mode) != None):
+        if self.mode and (Simulator._Mode.get(self.mode) is not None):
             self._SimuCamera.setMode(Simulator._Mode[self.mode])
 
         if "PREFETCH" in self.mode and self.nb_prefetched_frames:
@@ -134,6 +135,8 @@ class Simulator(PyTango.Device_4Impl):
             fill_type = Simulator._FillType[self.fill_type]
             self._SimuCamera.getFrameGetter().setFillType(fill_type)
 
+        self.set_state(DevState.ON)
+
     @core.DEB_MEMBER_FUNCT
     def getFrameDimFromLongArray(self, dim_arr):
         width, height, depth = dim_arr
@@ -152,173 +155,226 @@ class Simulator(PyTango.Device_4Impl):
         size = frame_dim.getSize()
         return [size.getWidth(), size.getHeight(), frame_dim.getDepth()]
 
-    @core.DEB_MEMBER_FUNCT
-    def getAttrStringValueList(self, attr_name):
-        return AttrHelper.get_attr_string_value_list(self, attr_name)
-
-    def trigExternal(self):
-        self._SimuCamera.extTrigAcq()
-
-    def __getattr__(self, name):
-        try:
-            return AttrHelper.get_attr_4u(
-                self, name, self._SimuCamera.getFrameGetter(), False
-            )
-        except:
-            return AttrHelper.get_attr_4u(self, name, self._SimuCamera)
-
     @staticmethod
     def getGaussPeaksFromFloatArray(peak_list_flat):
         peak_list = grouper(4, map(float, peak_list_flat))
         gauss_peaks = [SimuMod.GaussPeak(*p) for p in peak_list]
         return gauss_peaks
 
-    def read_peaks(self, attr):
+    # ------------------------------------------------------------------
+    #    Commands
+    # ------------------------------------------------------------------
+    @command(dtype_in=str, dtype_out=(str,))
+    @core.DEB_MEMBER_FUNCT
+    def getAttrStringValueList(self, attr_name):
+        return AttrHelper.get_attr_string_value_list(self, attr_name)
+
+    @command
+    def trigExternal(self):
+        self._SimuCamera.extTrigAcq()
+
+    # ------------------------------------------------------------------
+    #    Attributes with custom read/write logic
+    # ------------------------------------------------------------------
+    def _frame_dim_fget(self):
+        return self.getLongArrayFromFrameDim(self._SimuCamera.getFrameDim())
+
+    def _frame_dim_fset(self, dim_arr):
+        self._SimuCamera.setFrameDim(self.getFrameDimFromLongArray(dim_arr))
+
+    frame_dim_attr = attribute(
+        name="frame_dim",
+        dtype=(int,),
+        max_dim_x=3,
+        access=AttrWriteType.READ_WRITE,
+        fget=_frame_dim_fget,
+        fset=_frame_dim_fset,
+    )
+
+    def _nb_prefetched_frames_fget(self):
+        if self._SimuCamera.getMode() in (
+            SimuMod.Camera.Mode.MODE_GENERATOR_PREFETCH,
+            SimuMod.Camera.Mode.MODE_LOADER_PREFETCH,
+        ):
+            return self._SimuCamera.getFrameGetter().getNbPrefetchedFrames()
+        return 0
+
+    _, _nb_prefetched_frames_fset = AttrHelper.make_fget_fset(
+        "nb_prefetched_frames", lambda self: self._SimuCamera.getFrameGetter()
+    )
+
+    nb_prefetched_frames_attr = attribute(
+        name="nb_prefetched_frames",
+        dtype=int,
+        access=AttrWriteType.READ_WRITE,
+        fget=_nb_prefetched_frames_fget,
+        fset=_nb_prefetched_frames_fset,
+    )
+
+    def _peaks_fget(self):
         gauss_peaks = self._SimuCamera.getFrameGetter().getPeaks()
         peak_list = [(p.x0, p.y0, p.fwhm, p.max) for p in gauss_peaks]
-        peak_list_flat = list(itertools.chain(*peak_list))
-        attr.set_value(peak_list_flat)
+        return list(itertools.chain(*peak_list))
 
-    def write_peaks(self, attr):
-        peak_list_flat = attr.get_write_value()
+    def _peaks_fset(self, peak_list_flat):
         gauss_peaks = self.getGaussPeaksFromFloatArray(peak_list_flat)
         self._SimuCamera.getFrameGetter().setPeaks(gauss_peaks)
 
-    def read_peak_angles(self, attr):
-        peak_angle_list = self._SimuCamera.getFrameGetter().getPeakAngles()
-        attr.set_value(peak_angle_list)
+    peaks_attr = attribute(
+        name="peaks",
+        dtype=(float,),
+        max_dim_x=4000,
+        access=AttrWriteType.READ_WRITE,
+        fget=_peaks_fget,
+        fset=_peaks_fset,
+    )
 
-    def write_peak_angles(self, attr):
-        peak_angle_list = attr.get_write_value()
+    def _peak_angles_fget(self):
+        return list(self._SimuCamera.getFrameGetter().getPeakAngles())
+
+    def _peak_angles_fset(self, peak_angle_list):
         self._SimuCamera.getFrameGetter().setPeakAngles(map(float, peak_angle_list))
 
-    def read_diffraction_pos(self, attr):
-        x, y = self._SimuCamera.getFrameGetter().getDiffractionPos()
-        attr.set_value((x, y))
+    peak_angles_attr = attribute(
+        name="peak_angles",
+        dtype=(float,),
+        max_dim_x=1000,
+        access=AttrWriteType.READ_WRITE,
+        fget=_peak_angles_fget,
+        fset=_peak_angles_fset,
+    )
 
-    def write_diffraction_pos(self, attr):
-        x, y = attr.get_write_value()
-        self._SimuCamera.getFrameGetter().setDiffractionPos(x, y)
-
-    def read_diffraction_speed(self, attr):
-        sx, sy = self._SimuCamera.getFrameGetter().getDiffractionSpeed()
-        attr.set_value((sx, sy))
-
-    def write_diffraction_speed(self, attr):
-        sx, sy = attr.get_write_value()
-        self._SimuCamera.getFrameGetter().setDiffractionSpeed(sx, sy)
-
-    def read_noise_level(self, attr):
-        noise = self._SimuCamera.getFrameGetter().getNoiseLevel()
-        attr.set_value(noise)
-
-    def write_noise_level(self, attr):
-        noise = attr.get_write_value()
-        self._SimuCamera.getFrameGetter().setNoiseLevel(noise)
-
-    def read_nb_prefetched_frames(self, attr):
-        if (
-            self._SimuCamera.getMode() == SimuMod.Camera.Mode.MODE_GENERATOR_PREFETCH
-        ) or (self._SimuCamera.getMode() == SimuMod.Camera.Mode.MODE_LOADER_PREFETCH):
-            nb_prefetched_frames = (
-                self._SimuCamera.getFrameGetter().getNbPrefetchedFrames()
-            )
-        else:
-            nb_prefetched_frames = 0
-        attr.set_value(nb_prefetched_frames)
-
-    def read_frame_dim(self, attr):
-        frame_dim = self._SimuCamera.getFrameDim()
-        dim_arr = self.getLongArrayFromFrameDim(frame_dim)
-        attr.set_value(dim_arr)
-
-    def write_frame_dim(self, attr):
-        dim_arr = attr.get_write_value()
-        frame_dim = self.getFrameDimFromLongArray(dim_arr)
-        self._SimuCamera.setFrameDim(frame_dim)
-
-    def write_file_pattern(self, attr):
-        pattern = attr.get_write_value()
+    def _file_pattern_fset(self, pattern):
         self._SimuCamera.getFrameGetter().setFilePattern(pattern)
 
+    file_pattern_attr = attribute(
+        name="file_pattern",
+        dtype=str,
+        access=AttrWriteType.WRITE,
+        fset=_file_pattern_fset,
+    )
 
-class SimulatorClass(PyTango.DeviceClass):
+    def _diffraction_pos_fget(self):
+        return self._SimuCamera.getFrameGetter().getDiffractionPos()
 
-    class_property_list = {}
+    def _diffraction_pos_fset(self, pos):
+        x, y = pos
+        self._SimuCamera.getFrameGetter().setDiffractionPos(x, y)
 
-    device_property_list = {
-        "frame_dim": [
-            PyTango.DevVarLongArray,
-            "Frame dimension in the form: width, height, depth",
-            [],
-        ],
-        "pixel_size": [
-            PyTango.DevVarDoubleArray,
-            "Pixel size in the form: width, height (in meter)",
-            [],
-        ],
-        "mode": [
-            PyTango.DevString,
-            "Simulator mode: GENERATOR, GENERATOR_PREFETCH, LOADER, LOADER_PREFETCH",
-            [],
-        ],
-        "nb_prefetched_frames": [PyTango.DevLong, "Number of prefetched frames", []],
-        "peaks": [
-            PyTango.DevVarDoubleArray,
-            "Gauss peak list [x0,y0,w0,A0,x1,y1,w1,A1...]",
-            [],
-        ],
-        "peak_angles": [
-            PyTango.DevVarDoubleArray,
-            "Base rotation angle for each peak",
-            [],
-        ],
-        "fill_type": [PyTango.DevString, "Image fill type: GAUSS, DIFFRACTION", []],
-        "rotation_axis": [
-            PyTango.DevString,
-            "Peak move policy: STATIC, ROTATIONX, ROTATIONY",
-            [],
-        ],
-    }
+    diffraction_pos = attribute(
+        dtype=(float,),
+        max_dim_x=2,
+        access=AttrWriteType.READ_WRITE,
+        fget=_diffraction_pos_fget,
+        fset=_diffraction_pos_fset,
+    )
 
-    cmd_list = {
-        "getAttrStringValueList": [
-            [PyTango.DevString, "Attribute name"],
-            [PyTango.DevVarStringArray, "Authorized String value list"],
-        ],
-        "trigExternal": [[PyTango.DevVoid, ""], [PyTango.DevVoid, ""]],
-    }
+    def _diffraction_speed_fget(self):
+        return self._SimuCamera.getFrameGetter().getDiffractionSpeed()
 
-    attr_list = {
-        # Simulator mode
-        "frame_dim": [[PyTango.DevLong, PyTango.SPECTRUM, PyTango.READ_WRITE, 3]],
-        "mode": [[PyTango.DevString, PyTango.SCALAR, PyTango.READ_WRITE]],
-        # Simulator with prefetch
-        "nb_prefetched_frames": [[PyTango.DevLong, PyTango.SCALAR, PyTango.READ_WRITE]],
-        # Simulator in loader mode
-        "file_pattern": [[PyTango.DevString, PyTango.SCALAR, PyTango.WRITE]],
-        # Simulator in generator mode
-        "peaks": [[PyTango.DevDouble, PyTango.SPECTRUM, PyTango.READ_WRITE, 4000]],
-        "peak_angles": [
-            [PyTango.DevDouble, PyTango.SPECTRUM, PyTango.READ_WRITE, 1000]
-        ],
-        "grow_factor": [[PyTango.DevDouble, PyTango.SCALAR, PyTango.READ_WRITE]],
-        "fill_type": [[PyTango.DevString, PyTango.SCALAR, PyTango.READ_WRITE]],
-        "rotation_axis": [[PyTango.DevString, PyTango.SCALAR, PyTango.READ_WRITE]],
-        "diffraction_pos": [
-            [PyTango.DevDouble, PyTango.SPECTRUM, PyTango.READ_WRITE, 2]
-        ],
-        "diffraction_speed": [
-            [PyTango.DevDouble, PyTango.SPECTRUM, PyTango.READ_WRITE, 2]
-        ],
-        "rotation_angle": [[PyTango.DevDouble, PyTango.SCALAR, PyTango.READ_WRITE]],
-        "rotation_speed": [[PyTango.DevDouble, PyTango.SCALAR, PyTango.READ_WRITE]],
-        "noise_level": [[PyTango.DevDouble, PyTango.SCALAR, PyTango.READ_WRITE]],
-    }
+    def _diffraction_speed_fset(self, speed):
+        sx, sy = speed
+        self._SimuCamera.getFrameGetter().setDiffractionSpeed(sx, sy)
 
-    def __init__(self, name):
-        PyTango.DeviceClass.__init__(self, name)
-        self.set_type(name)
+    diffraction_speed = attribute(
+        dtype=(float,),
+        max_dim_x=2,
+        access=AttrWriteType.READ_WRITE,
+        fget=_diffraction_speed_fget,
+        fset=_diffraction_speed_fset,
+    )
+
+    # ------------------------------------------------------------------
+    #    Attributes fully dispatched by naming convention (no explicit
+    #    logic in the legacy code either - see AttrHelper.make_fget_fset)
+    # ------------------------------------------------------------------
+    _mode_fget, _mode_fset = AttrHelper.make_fget_fset(
+        "mode",
+        lambda self: self._SimuCamera.getFrameGetter(),
+        lambda self: self._SimuCamera,
+        enum=_Mode,
+    )
+    mode_attr = attribute(
+        name="mode",
+        dtype=str,
+        access=AttrWriteType.READ_WRITE,
+        fget=_mode_fget,
+        fset=_mode_fset,
+    )
+
+    _fill_type_fget, _fill_type_fset = AttrHelper.make_fget_fset(
+        "fill_type",
+        lambda self: self._SimuCamera.getFrameGetter(),
+        lambda self: self._SimuCamera,
+        enum=_FillType,
+    )
+    fill_type_attr = attribute(
+        name="fill_type",
+        dtype=str,
+        access=AttrWriteType.READ_WRITE,
+        fget=_fill_type_fget,
+        fset=_fill_type_fset,
+    )
+
+    _rotation_axis_fget, _rotation_axis_fset = AttrHelper.make_fget_fset(
+        "rotation_axis",
+        lambda self: self._SimuCamera.getFrameGetter(),
+        lambda self: self._SimuCamera,
+        enum=_RotationAxis,
+    )
+    rotation_axis_attr = attribute(
+        name="rotation_axis",
+        dtype=str,
+        access=AttrWriteType.READ_WRITE,
+        fget=_rotation_axis_fget,
+        fset=_rotation_axis_fset,
+    )
+
+    _grow_factor_fget, _grow_factor_fset = AttrHelper.make_fget_fset(
+        "grow_factor",
+        lambda self: self._SimuCamera.getFrameGetter(),
+        lambda self: self._SimuCamera,
+    )
+    grow_factor = attribute(
+        dtype=float,
+        access=AttrWriteType.READ_WRITE,
+        fget=_grow_factor_fget,
+        fset=_grow_factor_fset,
+    )
+
+    _rotation_angle_fget, _rotation_angle_fset = AttrHelper.make_fget_fset(
+        "rotation_angle",
+        lambda self: self._SimuCamera.getFrameGetter(),
+        lambda self: self._SimuCamera,
+    )
+    rotation_angle = attribute(
+        dtype=float,
+        access=AttrWriteType.READ_WRITE,
+        fget=_rotation_angle_fget,
+        fset=_rotation_angle_fset,
+    )
+
+    _rotation_speed_fget, _rotation_speed_fset = AttrHelper.make_fget_fset(
+        "rotation_speed",
+        lambda self: self._SimuCamera.getFrameGetter(),
+        lambda self: self._SimuCamera,
+    )
+    rotation_speed = attribute(
+        dtype=float,
+        access=AttrWriteType.READ_WRITE,
+        fget=_rotation_speed_fget,
+        fset=_rotation_speed_fset,
+    )
+
+    _noise_level_fget, _noise_level_fset = AttrHelper.make_fget_fset(
+        "noise_level", lambda self: self._SimuCamera.getFrameGetter()
+    )
+    noise_level = attribute(
+        dtype=float,
+        access=AttrWriteType.READ_WRITE,
+        fget=_noise_level_fget,
+        fset=_noise_level_fset,
+    )
 
 
 # ----------------------------------------------------------------------------
@@ -358,4 +414,4 @@ def get_control(
 
 
 def get_tango_specific_class_n_device():
-    return SimulatorClass, Simulator
+    return Simulator.TangoClassClass, Simulator
