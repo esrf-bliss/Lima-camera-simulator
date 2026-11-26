@@ -19,6 +19,9 @@ build-linux:
 
 build-win:
   extends: .build-cpp
+  script:
+    - call conda config --set channel_priority flexible
+    - call conda mambabuild ./conda/camera --output-folder=dist -c conda-forge --channel=http://bcu-ci.esrf.fr/stable
   tags:
     - win
 
